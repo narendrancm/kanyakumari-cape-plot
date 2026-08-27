@@ -1,0 +1,27 @@
+# Python & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.venv*/
+.pytest_cache/
+
+# Excel temporary lock files
+~$*.xlsx
+*.tmp
+
+# Unrelated standalone projects
+GestureFlow/
+broma-bakery/
+inbiotics/
+realestate_crm/
+*.pptx
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini

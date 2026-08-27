@@ -1,0 +1,84 @@
+[
+  {
+    "name": "Agasteeswaram",
+    "cx": 500.0,
+    "cy": 500.0,
+    "r": 110.0,
+    "taluk": "Agasteeswaram",
+    "hq": "Agasteeswaram / Nagercoil South / Kanyakumari",
+    "description": "District administrative center and southernmost cape hub.",
+    "is_center": true
+  },
+  {
+    "name": "Thovalai",
+    "cx": 830.0,
+    "cy": 220.0,
+    "r": 65.0,
+    "taluk": "Thovalai",
+    "hq": "Boothapandy",
+    "description": "Eastern agricultural corridor and wind power basin."
+  },
+  {
+    "name": "Thiruvattar",
+    "cx": 500.0,
+    "cy": 130.0,
+    "r": 75.0,
+    "taluk": "Thiruvattar",
+    "hq": "Thiruvattar",
+    "description": "Northern foothills, river valleys, and rubber plantations."
+  },
+  {
+    "name": "Melpuram",
+    "cx": 180.0,
+    "cy": 200.0,
+    "r": 75.0,
+    "taluk": "Vilavancode",
+    "hq": "Marthandam / Melpuram",
+    "description": "North-western border commercial and educational cluster."
+  },
+  {
+    "name": "Munchirai",
+    "cx": 130.0,
+    "cy": 500.0,
+    "r": 78.0,
+    "taluk": "Vilavancode",
+    "hq": "Pudukadai / Munchirai",
+    "description": "Western coastal and estuarine belt bordering Kerala."
+  },
+  {
+    "name": "Killiyoor",
+    "cx": 180.0,
+    "cy": 800.0,
+    "r": 75.0,
+    "taluk": "Killiyoor",
+    "hq": "Karungal / Killiyoor",
+    "description": "South-western coastal artisanal and educational zone."
+  },
+  {
+    "name": "Kurunthancode",
+    "cx": 370.0,
+    "cy": 870.0,
+    "r": 78.0,
+    "taluk": "Kalkulam",
+    "hq": "Kurunthancode / Thingalnagar",
+    "description": "Central-southern coastal agrarian transition block."
+  },
+  {
+    "name": "Rajakkamangalam",
+    "cx": 650.0,
+    "cy": 870.0,
+    "r": 72.0,
+    "taluk": "Agasteeswaram",
+    "hq": "Rajakkamangalam",
+    "description": "Southern coastal fishing villages and medical college corridor."
+  },
+  {
+    "name": "Thuckalay",
+    "cx": 820.0,
+    "cy": 770.0,
+    "r": 80.0,
+    "taluk": "Kalkulam",
+    "hq": "Thuckalay / Padmanabhapuram",
+    "description": "Historic capital region and cultural heartland."
+  }
+]
