@@ -1050,31 +1050,16 @@
   
   
   
-  // Synchronized Filter Handler (Sidebar Chips + Map Legend Chips)
-  function applyFilterSelection(filterKey) {
-    state.filterType = filterKey || 'all';
-
-    document.querySelectorAll('.filter-chip').forEach(c => {
-      c.classList.toggle('active', c.getAttribute('data-filter') === state.filterType);
-    });
-    document.querySelectorAll('.map-legend-chip').forEach(c => {
-      c.classList.toggle('active', c.getAttribute('data-filter') === state.filterType);
-    });
-
-    renderPlotNodes();
-    renderIndexView();
-    updateUrlParams();
-  }
-
-  document.querySelectorAll('.filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      applyFilterSelection(chip.getAttribute('data-filter'));
-    });
-  });
-
-  document.querySelectorAll('.map-legend-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      applyFilterSelection(chip.getAttribute('data-filter'));
+  
+  // Primary Header Segmented Filter Shelf Listener
+  document.querySelectorAll('.filter-segment').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-segment').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.filterType = btn.getAttribute('data-filter') || 'all';
+      renderPlotNodes();
+      renderIndexView();
+      updateUrlParams();
     });
   });
 
