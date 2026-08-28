@@ -126,8 +126,6 @@
 
     searchInput: document.getElementById('search-input'),
     searchClear: document.getElementById('search-clear'),
-    exportBtn: document.getElementById('export-btn'),
-    exportMenu: document.getElementById('export-menu'),
 
     plotSvg: document.getElementById('plot-svg'),
     svgContainer: document.getElementById('svg-container'),
@@ -837,17 +835,6 @@ Visible map markers rendered: ${renderedCount}`);
     // Mobile View Toggle
     if (el.viewPlotBtn) el.viewPlotBtn.addEventListener('click', () => switchMobileView('plot'));
     if (el.viewIndexBtn) el.viewIndexBtn.addEventListener('click', () => switchMobileView('index'));
-
-    // Export Dropdown
-    if (el.exportBtn) {
-      el.exportBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (el.exportMenu) el.exportMenu.classList.toggle('hidden');
-      });
-    }
-    document.addEventListener('click', () => {
-      if (el.exportMenu) el.exportMenu.classList.add('hidden');
-    });
 
     
   // FULL MAP PAN, DRAG & ZOOM ENGINE (Desktop Pointer + Mobile Touch + Wheel)
