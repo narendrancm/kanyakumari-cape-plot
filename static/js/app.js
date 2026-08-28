@@ -537,28 +537,39 @@
     });
   }
 
-  // Instant on-canvas SVG hover label with clean high-contrast white outline
+    // Instant on-canvas SVG hover card (Single clean element, zero ghosting)
+    // Instant on-canvas SVG hover card (Single clean element, zero ghosting)
   function handleNodeHover(inst, nodeGroup) {
     el.layerOverlays.innerHTML = '';
-    el.layerNodes.style.opacity = '0.55';
+    el.layerNodes.style.opacity = '0.50';
     nodeGroup.style.opacity = '1.0';
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('class', 'svg-hover-tooltip');
+    g.setAttribute('class', 'svg-hover-card');
 
-    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    bg.setAttribute('x', inst.schematic_x + 9);
-    bg.setAttribute('y', inst.schematic_y + 3.5);
-    bg.setAttribute('class', 'node-hover-label-bg');
-    bg.textContent = `${inst.name} (${inst.category})`;
+    const labelStr = `${inst.name} (${inst.category})`;
+    // Approximate dynamic width based on text length
+    const cardWidth = Math.max(140, labelStr.length * 6.4 + 18);
+    const cardHeight = 24;
+    const cardX = inst.schematic_x + 10;
+    const cardY = inst.schematic_y - 12;
 
+    // 1. Single crisp background pill
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', cardX);
+    rect.setAttribute('y', cardY);
+    rect.setAttribute('width', cardWidth);
+    rect.setAttribute('height', cardHeight);
+    rect.setAttribute('class', 'svg-hover-card-bg');
+
+    // 2. Single text element
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', inst.schematic_x + 9);
-    text.setAttribute('y', inst.schematic_y + 3.5);
-    text.setAttribute('class', 'node-hover-label');
-    text.textContent = `${inst.name} (${inst.category})`;
+    text.setAttribute('x', cardX + 9);
+    text.setAttribute('y', cardY + 16);
+    text.setAttribute('class', 'svg-hover-card-text');
+    text.textContent = labelStr;
 
-    g.appendChild(bg);
+    g.appendChild(rect);
     g.appendChild(text);
     el.layerOverlays.appendChild(g);
   }
