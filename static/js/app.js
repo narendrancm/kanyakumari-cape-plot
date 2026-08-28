@@ -615,6 +615,7 @@
     setViewBox(cx - newW / 2, cy - newH / 2, newW, newH, true);
   }, { passive: false });
 
+  
   function updateKpiBadgeCounts(subset) {
     const totalCount = subset.length;
     const schoolsCount = subset.filter(i => i.institution_type === 'school').length;
@@ -628,6 +629,16 @@
       'govt': govtCount, 'aided': aidedCount, 'verified': verifiedCount
     };
 
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      const filterKey = chip.getAttribute('data-filter');
+      const countEl = chip.querySelector('.chip-count');
+      if (countEl && countMap[filterKey] !== undefined) {
+        countEl.textContent = countMap[filterKey].toLocaleString();
+      }
+    });
+  }
+;
+
     el.kpiPills.forEach(pill => {
       const filterKey = pill.getAttribute('data-filter');
       const countEl = pill.querySelector('.kpi-count');
@@ -638,6 +649,7 @@
   }
 
   
+  
   function getFilteredInstitutions() {
     let list = state.institutions;
 
@@ -646,11 +658,11 @@
       list = list.filter(i => i.block === state.selectedBlock);
     }
 
-    // Filter by Top Filter Bar (all, schools, colleges, govt, aided, verified)
+    // Filter by Type or Category (all, schools, colleges, govt, aided, verified)
     if (state.filterType === 'schools') list = list.filter(i => i.institution_type === 'school');
     else if (state.filterType === 'colleges') list = list.filter(i => i.institution_type === 'college');
-    else if (state.filterType === 'govt') list = list.filter(i => i.management_type === 'Government');
-    else if (state.filterType === 'aided') list = list.filter(i => i.management_type === 'Private-Aided');
+    else if (state.filterType === 'govt') list = list.filter(i => i.management_type && i.management_type.toLowerCase().includes('government'));
+    else if (state.filterType === 'aided') list = list.filter(i => i.management_type && i.management_type.toLowerCase().includes('aided'));
     else if (state.filterType === 'verified') list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
 
     // Filter by Search Query
@@ -667,6 +679,7 @@
     }
     return list;
   }
+
 
 
   function renderIndexView() {
@@ -1036,17 +1049,39 @@
 
   
   
-  // Top Primary Filter Bar Listener (Clean & Professional, No Emojis)
-  document.querySelectorAll('.top-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.top-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.filterType = btn.getAttribute('data-filter') || 'all';
-      renderPlotNodes();
-      renderIndexView();
-      updateUrlParams();
+  
+  // Synchronized Filter Handler (Sidebar Chips + Map Legend Chips)
+  function applyFilterSelection(filterKey) {
+    state.filterType = filterKey || 'all';
+
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      c.classList.toggle('active', c.getAttribute('data-filter') === state.filterType);
+    });
+    document.querySelectorAll('.map-legend-chip').forEach(c => {
+      c.classList.toggle('active', c.getAttribute('data-filter') === state.filterType);
+    });
+
+    renderPlotNodes();
+    renderIndexView();
+    updateUrlParams();
+  }
+
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      applyFilterSelection(chip.getAttribute('data-filter'));
     });
   });
+
+  document.querySelectorAll('.map-legend-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      applyFilterSelection(chip.getAttribute('data-filter'));
+    });
+  });
+
+  const btnClearBlockFilter = document.getElementById('btn-clear-block-filter');
+  if (btnClearBlockFilter) {
+    btnClearBlockFilter.addEventListener('click', resetDistrictView);
+  }
 readUrlParams();
   initData();
 })();

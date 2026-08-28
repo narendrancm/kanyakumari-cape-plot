@@ -73,22 +73,12 @@
       </a>
     </div>
 
-    <!-- Center: Extended Search Bar + High-Contrast Top Filter Pills -->
+    <!-- Extended Search Box in Header -->
     <div class="header-center">
       <div class="search-box extended-search" role="search">
         <span class="search-icon" aria-hidden="true">⌕</span>
         <input type="text" id="search-input" placeholder="Search 1,296 schools, colleges, leadership, locations..." aria-label="Search institutions">
         <button id="search-clear" class="search-clear-btn hidden" title="Clear Search" aria-label="Clear Search">✕</button>
-      </div>
-
-      <!-- Top Filter Pill Shelf (Matches floating pill design, clean & crisp) -->
-      <div class="top-filter-bar" role="group" aria-label="Filter institutions">
-        <button class="top-filter-btn active" data-filter="all" id="filter-all">All (1,296)</button>
-        <button class="top-filter-btn" data-filter="schools" id="filter-schools">● Schools (1,213)</button>
-        <button class="top-filter-btn" data-filter="colleges" id="filter-colleges">■ Colleges (83)</button>
-        <button class="top-filter-btn" data-filter="govt" id="filter-govt">Govt</button>
-        <button class="top-filter-btn" data-filter="aided" id="filter-aided">Aided</button>
-        <button class="top-filter-btn" data-filter="verified" id="filter-verified">Verified</button>
       </div>
     </div>
 
@@ -127,6 +117,16 @@
           <button id="btn-clear-block-filter" class="btn-clear-banner" title="Show All Blocks">✕ Clear</button>
         </div>
 
+        <!-- Filter Pill Shelf directly above institutions (Responsive, Clean & Solid Active Teal) -->
+        <div class="sidebar-filter-shelf" role="group" aria-label="Quick Category Filters">
+          <button class="filter-chip active" data-filter="all" id="pill-all">All <span class="chip-count">1,296</span></button>
+          <button class="filter-chip" data-filter="schools" id="pill-schools">● Schools <span class="chip-count">1,213</span></button>
+          <button class="filter-chip" data-filter="colleges" id="pill-colleges">■ Colleges <span class="chip-count">83</span></button>
+          <button class="filter-chip" data-filter="govt" id="pill-govt">Govt <span class="chip-count">482</span></button>
+          <button class="filter-chip" data-filter="aided" id="pill-aided">Aided <span class="chip-count">418</span></button>
+          <button class="filter-chip" data-filter="verified" id="pill-verified">Verified <span class="chip-count">797</span></button>
+        </div>
+
         <div class="sidebar-count-bar">
           <span id="sidebar-total-label" class="sidebar-total-label">Showing all 1,296 institutions</span>
         </div>
@@ -154,6 +154,16 @@
       <div id="active-block-pill" class="active-block-pill hidden" role="status" aria-live="polite">
         <span id="active-block-name">Agastheeswaram</span>
         <button id="btn-exit-block" title="Back to Full District" aria-label="Back to Full District">✕</button>
+      </div>
+
+      <!-- On-Map Floating Legend / Quick Filter Dock (Clean pills, 100% synchronized) -->
+      <div class="map-legend-dock" role="toolbar" aria-label="Quick Map Filter Legend">
+        <button class="map-legend-chip active" data-filter="all" title="Show all institutions">All (1,296)</button>
+        <button class="map-legend-chip" data-filter="schools" title="Show schools only">● Schools (1,213)</button>
+        <button class="map-legend-chip" data-filter="colleges" title="Show colleges only">■ Colleges (83)</button>
+        <button class="map-legend-chip" data-filter="govt" title="Show government institutions">Govt</button>
+        <button class="map-legend-chip" data-filter="aided" title="Show private-aided institutions">Aided</button>
+        <button class="map-legend-chip" data-filter="verified" title="Show verified institutions">Verified</button>
       </div>
 
       <!-- Interactive Vector SVG Canvas -->
