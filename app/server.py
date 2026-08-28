@@ -186,6 +186,15 @@ def get_institutions(
         "institutions": rows
     }
 
+@app.get("/api/search")
+def search_institutions(q: str = Query("", description="Search term"), limit: int = 50):
+    res = get_institutions(q=q, limit=limit)
+    return {
+        "count": res["count"],
+        "query": q,
+        "results": res["institutions"]
+    }
+
 @app.get("/api/institutions/{inst_id}")
 def get_institution_detail(inst_id: str):
     conn = get_db()
