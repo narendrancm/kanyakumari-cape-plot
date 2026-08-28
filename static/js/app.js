@@ -98,8 +98,13 @@
     isLoaded: false,
     camera: {
       x: 0, y: 0, w: 1000, h: 1000,
-      targetX: 0, targetY: 0, targetW: 1000, targetH: 1000,
-      isPanning: false, startX: 0, startY: 0
+      isPanning: false,
+      hasDragged: false,
+      startX: 0, startY: 0,
+      startVbX: 0, startVbY: 0,
+      startVbW: 1000, startVbH: 1000,
+      touchStartDist: 0,
+      touchStartW: 1000, touchStartH: 1000
     }
   };
 
@@ -324,6 +329,10 @@
       path.addEventListener('mouseenter', () => handleBlockHover(b));
       path.addEventListener('mouseleave', () => handleBlockLeave());
       path.addEventListener('click', (e) => {
+        if (state.camera.hasDragged) {
+          state.camera.hasDragged = false;
+          return;
+        }
         e.stopPropagation();
         zoomToBlock(b.name);
       });
@@ -449,6 +458,10 @@
       shape.addEventListener('mouseenter', () => showNodeHoverCard(inst, x, y));
       shape.addEventListener('mouseleave', () => hideNodeHoverCard());
       shape.addEventListener('click', (e) => {
+        if (state.camera.hasDragged) {
+          state.camera.hasDragged = false;
+          return;
+        }
         e.stopPropagation();
         selectInstitution(inst.id);
       });
@@ -756,12 +769,18 @@ Visible map markers rendered: ${renderedCount}`);
     updateUrlParams();
   }
 
+  function setViewBox(x, y, w, h) {
+    state.camera.x = x;
+    state.camera.y = y;
+    state.camera.w = w;
+    state.camera.h = h;
+    if (el.plotSvg) {
+      el.plotSvg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+    }
+  }
+
   function animateViewBox(targetX, targetY, targetW, targetH) {
-    state.camera.targetX = targetX;
-    state.camera.targetY = targetY;
-    state.camera.targetW = targetW;
-    state.camera.targetH = targetH;
-    el.plotSvg.setAttribute('viewBox', `${targetX} ${targetY} ${targetW} ${targetH}`);
+    setViewBox(targetX, targetY, targetW, targetH);
   }
 
   // EVENT LISTENERS & SETUP
@@ -829,6 +848,168 @@ Visible map markers rendered: ${renderedCount}`);
     document.addEventListener('click', () => {
       if (el.exportMenu) el.exportMenu.classList.add('hidden');
     });
+
+    
+  // FULL MAP PAN, DRAG & ZOOM ENGINE (Desktop Pointer + Mobile Touch + Wheel)
+  function setupMapPanAndZoom() {
+    if (!el.svgContainer || !el.plotSvg) return;
+
+    // Pointer Down (Mouse, Touch, Pen)
+    el.svgContainer.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      if (e.target.closest('.ctrl-btn') || e.target.closest('.active-block-pill button') || e.target.closest('.map-legend')) {
+        return;
+      }
+
+      const vb = el.plotSvg.viewBox.baseVal;
+      state.camera.isPanning = true;
+      state.camera.hasDragged = false;
+      state.camera.startX = e.clientX;
+      state.camera.startY = e.clientY;
+      state.camera.startVbX = vb.x;
+      state.camera.startVbY = vb.y;
+      state.camera.startVbW = vb.width;
+      state.camera.startVbH = vb.height;
+    });
+
+    // Pointer Move
+    el.svgContainer.addEventListener('pointermove', (e) => {
+      if (!state.camera.isPanning) return;
+
+      const dx = e.clientX - state.camera.startX;
+      const dy = e.clientY - state.camera.startY;
+
+      if (!state.camera.hasDragged && Math.hypot(dx, dy) > 4) {
+        state.camera.hasDragged = true;
+        el.svgContainer.classList.add('is-panning');
+        try {
+          el.svgContainer.setPointerCapture(e.pointerId);
+        } catch (err) {}
+      }
+
+      if (state.camera.hasDragged) {
+        const rect = el.svgContainer.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+
+        const scaleX = state.camera.startVbW / rect.width;
+        const scaleY = state.camera.startVbH / rect.height;
+
+        const newX = state.camera.startVbX - dx * scaleX;
+        const newY = state.camera.startVbY - dy * scaleY;
+
+        setViewBox(newX, newY, state.camera.startVbW, state.camera.startVbH);
+      }
+    });
+
+    // Pointer Up / Cancel / Leave
+    const endPan = (e) => {
+      if (state.camera.isPanning) {
+        state.camera.isPanning = false;
+        el.svgContainer.classList.remove('is-panning');
+        try {
+          if (e && e.pointerId !== undefined && el.svgContainer.hasPointerCapture(e.pointerId)) {
+            el.svgContainer.releasePointerCapture(e.pointerId);
+          }
+        } catch (err) {}
+        
+        // Reset hasDragged after the immediate synthetic click event has passed
+        if (state.camera.hasDragged) {
+          setTimeout(() => {
+            state.camera.hasDragged = false;
+          }, 60);
+        }
+      }
+    };
+
+    el.svgContainer.addEventListener('pointerup', endPan);
+    el.svgContainer.addEventListener('pointercancel', endPan);
+    el.svgContainer.addEventListener('pointerleave', (e) => {
+      if (state.camera.isPanning && e && e.pointerId !== undefined) {
+        try {
+          if (!el.svgContainer.hasPointerCapture(e.pointerId)) {
+            endPan(e);
+          }
+        } catch (err) { endPan(e); }
+      }
+    });
+
+    // Wheel Zoom (Anchored to mouse cursor coordinate in SVG space)
+    el.svgContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = el.svgContainer.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const vb = el.plotSvg.viewBox.baseVal;
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+
+      const zoomFactor = e.deltaY < 0 ? 0.85 : 1.18;
+      const newW = Math.max(Math.min(vb.width * zoomFactor, 3000), 50);
+      const newH = Math.max(Math.min(vb.height * zoomFactor, 3000), 50);
+
+      const svgMouseX = vb.x + px * vb.width;
+      const svgMouseY = vb.y + py * vb.height;
+
+      const newX = svgMouseX - px * newW;
+      const newY = svgMouseY - py * newH;
+
+      setViewBox(newX, newY, newW, newH);
+    }, { passive: false });
+
+    // Touch Pinch Zoom & Pan on mobile
+    let initialTouchDist = 0;
+    let initialTouchW = 1000;
+    let initialTouchH = 1000;
+    let initialTouchMidX = 0;
+    let initialTouchMidY = 0;
+    let initialVbX = 0;
+    let initialVbY = 0;
+
+    el.svgContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        state.camera.isPanning = false; // Disable single pointer pan during pinch
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        initialTouchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const vb = el.plotSvg.viewBox.baseVal;
+        initialTouchW = vb.width;
+        initialTouchH = vb.height;
+        initialVbX = vb.x;
+        initialVbY = vb.y;
+        initialTouchMidX = (t1.clientX + t2.clientX) / 2;
+        initialTouchMidY = (t1.clientY + t2.clientY) / 2;
+      }
+    }, { passive: false });
+
+    el.svgContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialTouchDist > 0) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const factor = initialTouchDist / Math.max(dist, 1);
+
+        const rect = el.svgContainer.getBoundingClientRect();
+        const px = (initialTouchMidX - rect.left) / rect.width;
+        const py = (initialTouchMidY - rect.top) / rect.height;
+
+        const newW = Math.max(Math.min(initialTouchW * factor, 3000), 50);
+        const newH = Math.max(Math.min(initialTouchH * factor, 3000), 50);
+
+        const svgMouseX = initialVbX + px * initialTouchW;
+        const svgMouseY = initialVbY + py * initialTouchH;
+
+        const newX = svgMouseX - px * newW;
+        const newY = svgMouseY - py * newH;
+
+        setViewBox(newX, newY, newW, newH);
+      }
+    }, { passive: false });
+  }
+
+
+    setupMapPanAndZoom();
 
     // Map Controls
     if (el.zoomIn) {
