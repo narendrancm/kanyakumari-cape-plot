@@ -1,12 +1,9 @@
-// Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer Client Engine
-// Measured Trousdale Interaction Model — Unconstrained 1:1 Direct-Track Block Dragging & Production Hardening
+// Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer
+// Natural Organic Cluster Layout & Instant Hover Navigation
 
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'cape_plot_block_positions_v3';
-
-  // Security: Strict HTML Entity Escaping against XSS
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -17,7 +14,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Security: Safe URL Protocol Validation
   function sanitizeUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return null;
     const trimmed = rawUrl.trim();
@@ -34,36 +30,72 @@
     return null;
   }
 
+  // Robust Clipboard Copy with Webview fallback
+  function copyTextToClipboard(text, successMsg) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMsg);
+      }).catch(() => {
+        fallbackCopyText(text, successMsg);
+      });
+    } else {
+      fallbackCopyText(text, successMsg);
+    }
+  }
+
+  function fallbackCopyText(text, successMsg) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast(successMsg);
+    } catch (err) {
+      showToast('Could not copy to clipboard');
+    }
+    document.body.removeChild(textArea);
+  }
+
+  let toastTimer = null;
+  function showToast(message) {
+    const elToast = document.getElementById('toast-notification');
+    if (!elToast) return;
+    clearTimeout(toastTimer);
+    elToast.textContent = message;
+    elToast.classList.remove('hidden');
+    toastTimer = setTimeout(() => {
+      elToast.classList.add('hidden');
+    }, 2800);
+  }
+
   const state = {
     view: 'plot',
     selectedBlock: null,
     selectedId: null,
     filterType: 'all',
+    kpiFilter: 'all',
     searchQuery: '',
+    currentInstitution: null,
     blocks: [],
-    defaultBlocks: [],
     institutions: [],
     institutionsMap: new Map(),
     camera: {
       x: 0,
       y: 0,
-      w: 1100,
-      h: 1100,
+      w: 1000,
+      h: 1000,
       targetX: 0,
       targetY: 0,
-      targetW: 1100,
-      targetH: 1100,
+      targetW: 1000,
+      targetH: 1000,
       isPanning: false,
       startX: 0,
       startY: 0
-    },
-    drag: {
-      isDragging: false,
-      blockName: null,
-      offsetX: 0,
-      offsetY: 0,
-      hasMoved: false,
-      nodesOffset: new Map()
     }
   };
 
@@ -75,6 +107,7 @@
     searchInput: document.getElementById('search-input'),
     searchClear: document.getElementById('search-clear'),
     pillBtns: document.querySelectorAll('.pill-btn'),
+    kpiPills: document.querySelectorAll('.kpi-pill'),
     exportBtn: document.getElementById('export-btn'),
     exportMenu: document.getElementById('export-menu'),
     btnResetView: document.getElementById('btn-reset-view'),
@@ -85,13 +118,17 @@
     layerLines: document.getElementById('layer-lines'),
     layerNodes: document.getElementById('layer-nodes'),
     layerOverlays: document.getElementById('layer-overlays'),
+    nodeHoverCard: document.getElementById('node-hover-card'),
+    hoverCardTitle: document.getElementById('hover-card-title'),
+    hoverCardSub: document.getElementById('hover-card-sub'),
+    hoverCardBadge: document.getElementById('hover-card-badge'),
+
     activeBlockPill: document.getElementById('active-block-pill'),
     activeBlockName: document.getElementById('active-block-name'),
     btnExitBlock: document.getElementById('btn-exit-block'),
     zoomIn: document.getElementById('zoom-in'),
     zoomOut: document.getElementById('zoom-out'),
     zoomReset: document.getElementById('zoom-reset'),
-    btnResetPositions: document.getElementById('btn-reset-positions'),
 
     indexContent: document.getElementById('index-content'),
     indexEmptyState: document.getElementById('index-empty-state'),
@@ -121,6 +158,11 @@
     dockNotes: document.getElementById('dock-notes'),
     btnOpenCorrection: document.getElementById('btn-open-correction'),
 
+    btnActCall: document.getElementById('btn-act-call'),
+    btnActWeb: document.getElementById('btn-act-web'),
+    btnActCopy: document.getElementById('btn-act-copy'),
+    btnActShare: document.getElementById('btn-act-share'),
+
     footerStats: document.getElementById('footer-stats-text'),
     linkPrivacy: document.getElementById('link-privacy'),
     linkTerms: document.getElementById('link-terms'),
@@ -133,15 +175,10 @@
     corrSuccess: document.getElementById('corr-success')
   };
 
-  // Convert screen coordinates to SVG space
-  function screenToSvg(clientX, clientY) {
-    const pt = el.plotSvg.createSVGPoint();
-    pt.x = clientX;
-    pt.y = clientY;
-    const ctm = el.plotSvg.getScreenCTM();
-    if (!ctm) return { x: clientX, y: clientY };
-    return pt.matrixTransform(ctm.inverse());
-  }
+  // Performance & Battery: Pause canvas animations when tab is hidden
+  document.addEventListener('visibilitychange', () => {
+    document.body.classList.toggle('is-tab-hidden', document.hidden);
+  });
 
   function readUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -165,80 +202,21 @@
     window.history.replaceState({}, '', newUrl);
   }
 
-  function loadCustomBlockPositions() {
+  async function initData() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const posMap = JSON.parse(saved);
-      state.blocks.forEach(b => {
-        if (posMap[b.name]) {
-          const deltaX = posMap[b.name].cx - b.cx;
-          const deltaY = posMap[b.name].cy - b.cy;
-          b.cx = posMap[b.name].cx;
-          b.cy = posMap[b.name].cy;
+      const resBlocks = await fetch('/api/blocks');
+      if (!resBlocks.ok) throw new Error('Blocks API failure');
+      const dataBlocks = await resBlocks.json();
+      state.blocks = dataBlocks.blocks;
 
-          state.institutions.forEach(inst => {
-            if (inst.block === b.name) {
-              inst.schematic_x += deltaX;
-              inst.schematic_y += deltaY;
-            }
-          });
-        }
+      const resInst = await fetch('/api/institutions?limit=1500');
+      if (!resInst.ok) throw new Error('Institutions API failure');
+      const dataInst = await resInst.json();
+      state.institutions = dataInst.institutions;
+
+      state.institutions.forEach(inst => {
+        state.institutionsMap.set(inst.id, inst);
       });
-      if (el.btnResetPositions) el.btnResetPositions.classList.remove('hidden');
-    } catch (e) {
-      console.warn('Could not load custom positions:', e);
-    }
-  }
-
-  function saveCustomBlockPositions() {
-    try {
-      const posMap = {};
-      state.blocks.forEach(b => {
-        posMap[b.name] = { cx: b.cx, cy: b.cy };
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(posMap));
-      if (el.btnResetPositions) el.btnResetPositions.classList.remove('hidden');
-    } catch (e) {
-      console.warn('Could not save positions:', e);
-    }
-  }
-
-  function resetBlockPositions() {
-    localStorage.removeItem(STORAGE_KEY);
-    if (el.btnResetPositions) el.btnResetPositions.classList.add('hidden');
-    
-    state.blocks = JSON.parse(JSON.stringify(state.defaultBlocks));
-    initData(false);
-  }
-
-  async function initData(fetchFromApi = true) {
-    try {
-      if (fetchFromApi) {
-        const resBlocks = await fetch('/api/blocks');
-        if (!resBlocks.ok) throw new Error('Blocks API failure');
-        const dataBlocks = await resBlocks.json();
-        state.blocks = dataBlocks.blocks;
-        state.defaultBlocks = JSON.parse(JSON.stringify(dataBlocks.blocks));
-
-        const resInst = await fetch('/api/institutions?limit=1500');
-        if (!resInst.ok) throw new Error('Institutions API failure');
-        const dataInst = await resInst.json();
-        state.institutions = dataInst.institutions;
-
-        state.institutions.forEach(inst => {
-          inst.base_x = inst.schematic_x;
-          inst.base_y = inst.schematic_y;
-          state.institutionsMap.set(inst.id, inst);
-        });
-
-        loadCustomBlockPositions();
-      } else {
-        state.institutions.forEach(inst => {
-          inst.schematic_x = inst.base_x;
-          inst.schematic_y = inst.base_y;
-        });
-      }
 
       renderPlotBlocks();
       renderPlotNodes();
@@ -294,7 +272,6 @@
       circle.setAttribute('cy', b.cy);
       circle.setAttribute('r', b.r);
       circle.setAttribute('class', `block-boundary-ring ${isCenter ? 'ring-center' : ''}`);
-      circle.setAttribute('id', `ring-${b.name}`);
 
       if (isCenter) {
         const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -302,10 +279,9 @@
         innerCircle.setAttribute('cy', b.cy);
         innerCircle.setAttribute('r', b.r + 8);
         innerCircle.setAttribute('fill', 'none');
-        innerCircle.setAttribute('stroke', 'rgba(31, 92, 87, 0.3)');
+        innerCircle.setAttribute('stroke', 'var(--color-ring-stroke)');
         innerCircle.setAttribute('stroke-width', '1');
         innerCircle.setAttribute('stroke-dasharray', '2 3');
-        innerCircle.setAttribute('id', `inner-ring-${b.name}`);
         g.appendChild(innerCircle);
       }
 
@@ -313,29 +289,21 @@
       text.setAttribute('x', b.cx);
       text.setAttribute('y', b.cy - b.r - 8);
       text.setAttribute('class', `block-label-text ${isCenter ? 'text-center-hub' : ''}`);
-      text.setAttribute('id', `label-${b.name}`);
       text.textContent = isCenter ? 'KANYAKUMARI · AGASTEESWARAM' : b.name.toUpperCase();
 
       const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       sub.setAttribute('x', b.cx);
       sub.setAttribute('y', b.cy - b.r + 4);
       sub.setAttribute('class', 'block-sub-count');
-      sub.setAttribute('id', `sub-${b.name}`);
       sub.textContent = `${b.total_count} inst · ${b.taluk}`;
 
       g.appendChild(circle);
       g.appendChild(text);
       g.appendChild(sub);
 
-      g.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.inst-node')) return;
-        e.preventDefault();
-        e.stopPropagation();
-        startBlockDrag(b, e);
-      });
-
+      // Clean block click: zoom directly to block without dragging checks
       g.addEventListener('click', (e) => {
-        if (state.drag.hasMoved) return;
+        if (e.target.closest('.inst-node')) return;
         e.stopPropagation();
         zoomToBlock(b.name);
       });
@@ -356,96 +324,10 @@
       line.setAttribute('y1', centerBlock.cy);
       line.setAttribute('x2', b.cx);
       line.setAttribute('y2', b.cy);
-      line.setAttribute('stroke', 'rgba(31, 92, 87, 0.14)');
-      line.setAttribute('stroke-width', '1');
-      line.setAttribute('stroke-dasharray', '4 4');
+      line.setAttribute('class', 'constellation-line');
       line.setAttribute('id', `line-${b.name}`);
       el.layerLines.appendChild(line);
     });
-  }
-
-  function startBlockDrag(block, e) {
-    state.drag.isDragging = true;
-    state.drag.blockName = block.name;
-    state.drag.hasMoved = false;
-
-    const svgPt = screenToSvg(e.clientX, e.clientY);
-    state.drag.offsetX = svgPt.x - block.cx;
-    state.drag.offsetY = svgPt.y - block.cy;
-
-    state.drag.nodesOffset.clear();
-    state.institutions.forEach(inst => {
-      if (inst.block === block.name) {
-        state.drag.nodesOffset.set(inst.id, {
-          relX: inst.schematic_x - block.cx,
-          relY: inst.schematic_y - block.cy
-        });
-      }
-    });
-
-    const grp = document.getElementById(`block-grp-${block.name}`);
-    if (grp) grp.classList.add('is-dragging');
-  }
-
-  function onBlockDragMove(e) {
-    if (!state.drag.isDragging) return;
-
-    state.drag.hasMoved = true;
-    const b = state.blocks.find(bl => bl.name === state.drag.blockName);
-    if (!b) return;
-
-    const svgPt = screenToSvg(e.clientX, e.clientY);
-    
-    b.cx = svgPt.x - state.drag.offsetX;
-    b.cy = svgPt.y - state.drag.offsetY;
-
-    const ring = document.getElementById(`ring-${b.name}`);
-    if (ring) { ring.setAttribute('cx', b.cx); ring.setAttribute('cy', b.cy); }
-    const innerRing = document.getElementById(`inner-ring-${b.name}`);
-    if (innerRing) { innerRing.setAttribute('cx', b.cx); innerRing.setAttribute('cy', b.cy); }
-    const label = document.getElementById(`label-${b.name}`);
-    if (label) { label.setAttribute('x', b.cx); label.setAttribute('y', b.cy - b.r - 8); }
-    const sub = document.getElementById(`sub-${b.name}`);
-    if (sub) { sub.setAttribute('x', b.cx); sub.setAttribute('y', b.cy - b.r + 4); }
-
-    state.institutions.forEach(inst => {
-      if (inst.block === b.name) {
-        const offset = state.drag.nodesOffset.get(inst.id);
-        if (offset) {
-          inst.schematic_x = b.cx + offset.relX;
-          inst.schematic_y = b.cy + offset.relY;
-
-          const nodeEl = document.querySelector(`.inst-node[data-id="${inst.id}"]`);
-          if (nodeEl) {
-            const mark = nodeEl.querySelector('.node-mark');
-            if (mark) {
-              if (inst.institution_type === 'school') {
-                mark.setAttribute('cx', inst.schematic_x);
-                mark.setAttribute('cy', inst.schematic_y);
-              } else {
-                mark.setAttribute('x', inst.schematic_x - 3.5);
-                mark.setAttribute('y', inst.schematic_y - 3.5);
-              }
-            }
-          }
-        }
-      }
-    });
-
-    updateConnectingLines();
-  }
-
-  function onBlockDragEnd() {
-    if (!state.drag.isDragging) return;
-
-    const grp = document.getElementById(`block-grp-${state.drag.blockName}`);
-    if (grp) grp.classList.remove('is-dragging');
-
-    if (state.drag.hasMoved) {
-      saveCustomBlockPositions();
-    }
-
-    state.drag.isDragging = false;
   }
 
   function renderPlotNodes() {
@@ -458,6 +340,7 @@
       g.setAttribute('data-id', inst.id);
       g.setAttribute('data-block', inst.block);
       g.setAttribute('role', 'button');
+      g.setAttribute('tabindex', '0');
       g.setAttribute('aria-label', `${inst.name}, ${inst.category} in ${inst.block}`);
 
       let mark;
@@ -465,49 +348,104 @@
         mark = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         mark.setAttribute('cx', inst.schematic_x);
         mark.setAttribute('cy', inst.schematic_y);
-        mark.setAttribute('r', inst.verification_status.includes('Verified') ? '3.8' : '3.2');
-        mark.setAttribute('class', `node-mark school ${inst.verification_status.includes('Verified') ? 'verified' : ''}`);
+        mark.setAttribute('r', inst.verification_status && inst.verification_status.includes('Verified') ? '3.8' : '3.2');
+        mark.setAttribute('class', `node-mark school ${inst.verification_status && inst.verification_status.includes('Verified') ? 'verified' : ''}`);
       } else {
         mark = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         mark.setAttribute('x', inst.schematic_x - 3.5);
         mark.setAttribute('y', inst.schematic_y - 3.5);
         mark.setAttribute('width', '7');
         mark.setAttribute('height', '7');
-        mark.setAttribute('rx', '1');
+        mark.setAttribute('rx', '1.5');
         mark.setAttribute('class', 'node-mark college');
       }
 
       g.appendChild(mark);
 
-      g.addEventListener('mouseenter', () => handleNodeHover(inst, g));
+      // Instant hover event: show school name immediately
+      g.addEventListener('mouseenter', (e) => handleNodeHover(inst, g, e));
+      g.addEventListener('mousemove', (e) => handleNodeHover(inst, g, e));
       g.addEventListener('mouseleave', () => handleNodeLeave());
+
+      // Keyboard focus support
+      g.addEventListener('focus', () => handleNodeFocus(inst, g));
+      g.addEventListener('blur', () => handleNodeLeave());
 
       g.addEventListener('click', (e) => {
         e.stopPropagation();
         selectInstitution(inst.id);
       });
 
+      g.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectInstitution(inst.id);
+        }
+      });
+
       el.layerNodes.appendChild(g);
     });
   }
 
-  function handleNodeHover(inst, nodeGroup) {
-    el.layerOverlays.innerHTML = '';
-    el.layerNodes.style.opacity = '0.7';
+  function handleNodeHover(inst, nodeGroup, e) {
+    el.layerNodes.style.opacity = '0.65';
     nodeGroup.style.opacity = '1.0';
 
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', inst.schematic_x + 8);
-    text.setAttribute('y', inst.schematic_y - 4);
-    text.setAttribute('class', 'node-hover-label');
-    text.textContent = `${inst.name} (${inst.category})`;
+    if (el.nodeHoverCard) {
+      el.hoverCardTitle.textContent = inst.name;
+      el.hoverCardSub.textContent = `${inst.category} · ${inst.block}`;
+      if (inst.verification_status && inst.verification_status.includes('Verified')) {
+        el.hoverCardBadge.textContent = '🛡️ Verified';
+        el.hoverCardBadge.className = 'hover-card-badge';
+      } else {
+        el.hoverCardBadge.textContent = inst.institution_type === 'college' ? '🎓 College' : '🏫 School';
+        el.hoverCardBadge.className = 'hover-card-badge';
+      }
+      
+      const rect = el.svgContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      el.nodeHoverCard.style.left = `${Math.min(rect.width - 310, Math.max(10, x + 12))}px`;
+      el.nodeHoverCard.style.top = `${Math.min(rect.height - 70, Math.max(30, y))}px`;
+      el.nodeHoverCard.classList.remove('hidden');
+    }
+  }
 
-    el.layerOverlays.appendChild(text);
+  function handleNodeFocus(inst, nodeGroup) {
+    el.layerNodes.style.opacity = '0.65';
+    nodeGroup.style.opacity = '1.0';
+
+    if (el.nodeHoverCard) {
+      el.hoverCardTitle.textContent = inst.name;
+      el.hoverCardSub.textContent = `${inst.category} · ${inst.block}`;
+      if (inst.verification_status && inst.verification_status.includes('Verified')) {
+        el.hoverCardBadge.textContent = '🛡️ Verified';
+        el.hoverCardBadge.className = 'hover-card-badge';
+      } else {
+        el.hoverCardBadge.textContent = inst.institution_type === 'college' ? '🎓 College' : '🏫 School';
+        el.hoverCardBadge.className = 'hover-card-badge';
+      }
+
+      const pt = el.plotSvg.createSVGPoint();
+      pt.x = inst.schematic_x;
+      pt.y = inst.schematic_y;
+      const ctm = el.plotSvg.getScreenCTM();
+      if (ctm) {
+        const screenPt = pt.matrixTransform(ctm);
+        const rect = el.svgContainer.getBoundingClientRect();
+        const x = screenPt.x - rect.left;
+        const y = screenPt.y - rect.top;
+        el.nodeHoverCard.style.left = `${Math.min(rect.width - 310, Math.max(10, x + 15))}px`;
+        el.nodeHoverCard.style.top = `${Math.min(rect.height - 70, Math.max(30, y))}px`;
+        el.nodeHoverCard.classList.remove('hidden');
+      }
+    }
   }
 
   function handleNodeLeave() {
-    el.layerOverlays.innerHTML = '';
     el.layerNodes.style.opacity = '1.0';
+    if (el.nodeHoverCard) el.nodeHoverCard.classList.add('hidden');
   }
 
   function setViewBox(x, y, w, h, animated = true) {
@@ -553,7 +491,7 @@
   function resetDistrictView() {
     state.selectedBlock = null;
     el.activeBlockPill.classList.add('hidden');
-    setViewBox(0, 0, 1100, 1100, true);
+    setViewBox(0, 0, 1000, 1000, true);
     updateUrlParams();
   }
 
@@ -581,11 +519,6 @@
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (state.drag.isDragging) {
-      onBlockDragMove(e);
-      return;
-    }
-
     if (!state.camera.isPanning) return;
     const dx = (e.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
     const dy = (e.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
@@ -601,26 +534,12 @@
   });
 
   window.addEventListener('mouseup', () => {
-    if (state.drag.isDragging) {
-      onBlockDragEnd();
-    }
     state.camera.isPanning = false;
   });
 
   el.svgContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
-      const targetBlock = e.target.closest('.block-cluster-group');
-      if (targetBlock && !e.target.closest('.inst-node')) {
-        const blockName = targetBlock.getAttribute('data-block');
-        const b = state.blocks.find(bl => bl.name === blockName);
-        if (b) {
-          e.preventDefault();
-          startBlockDrag(b, touch);
-          return;
-        }
-      }
-
       state.camera.isPanning = true;
       state.camera.startX = touch.clientX;
       state.camera.startY = touch.clientY;
@@ -628,31 +547,21 @@
   }, { passive: false });
 
   el.svgContainer.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 1 && state.camera.isPanning) {
       const touch = e.touches[0];
-      if (state.drag.isDragging) {
-        e.preventDefault();
-        onBlockDragMove(touch);
-        return;
-      }
-      if (state.camera.isPanning) {
-        const dx = (touch.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
-        const dy = (touch.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
-        state.camera.targetX -= dx;
-        state.camera.targetY -= dy;
-        state.camera.x -= dx;
-        state.camera.y -= dy;
-        el.plotSvg.setAttribute('viewBox', `${state.camera.x} ${state.camera.y} ${state.camera.w} ${state.camera.h}`);
-        state.camera.startX = touch.clientX;
-        state.camera.startY = touch.clientY;
-      }
+      const dx = (touch.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
+      const dy = (touch.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
+      state.camera.targetX -= dx;
+      state.camera.targetY -= dy;
+      state.camera.x -= dx;
+      state.camera.y -= dy;
+      el.plotSvg.setAttribute('viewBox', `${state.camera.x} ${state.camera.y} ${state.camera.w} ${state.camera.h}`);
+      state.camera.startX = touch.clientX;
+      state.camera.startY = touch.clientY;
     }
   }, { passive: false });
 
   el.svgContainer.addEventListener('touchend', () => {
-    if (state.drag.isDragging) {
-      onBlockDragEnd();
-    }
     state.camera.isPanning = false;
   });
 
@@ -670,8 +579,6 @@
     setViewBox(newX, newY, newW, newH, true);
   }, { passive: false });
 
-  
-  // Dynamic KPI Count Recalculation (Phase 5)
   function updateKpiBadgeCounts(subset) {
     const totalCount = subset.length;
     const schoolsCount = subset.filter(i => i.institution_type === 'school').length;
@@ -700,9 +607,23 @@
 
   function getFilteredInstitutions() {
     let list = state.institutions;
+    
     if (state.filterType !== 'all') {
       list = list.filter(i => i.institution_type === state.filterType);
     }
+
+    if (state.kpiFilter === 'schools') {
+      list = list.filter(i => i.institution_type === 'school');
+    } else if (state.kpiFilter === 'colleges') {
+      list = list.filter(i => i.institution_type === 'college');
+    } else if (state.kpiFilter === 'govt') {
+      list = list.filter(i => i.management_type === 'Government');
+    } else if (state.kpiFilter === 'aided') {
+      list = list.filter(i => i.management_type === 'Private-Aided');
+    } else if (state.kpiFilter === 'verified') {
+      list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
+    }
+
     if (state.searchQuery.trim()) {
       const q = state.searchQuery.trim().toLowerCase();
       list = list.filter(i => 
@@ -720,7 +641,6 @@
   function renderIndexView() {
     el.indexContent.innerHTML = '';
 
-    // Dynamically compute counts against active search & type query
     let baseSubset = state.institutions;
     if (state.filterType !== 'all') {
       baseSubset = baseSubset.filter(i => i.institution_type === state.filterType);
@@ -743,7 +663,7 @@
     if (filtered.length === 0) {
       el.indexEmptyState.classList.remove('hidden');
       el.emptyStateMsg.textContent = state.searchQuery 
-        ? `No institutions matched your search for "${state.searchQuery}".` 
+        ? `No institutions matched "${state.searchQuery}".` 
         : 'No institutions available under the selected filter.';
       return;
     } else {
@@ -812,6 +732,7 @@
       const res = await fetch(`/api/institutions/${instId}`);
       if (!res.ok) throw new Error('Detail API failure');
       const data = await res.json();
+      state.currentInstitution = data;
 
       el.dockTitle.textContent = data.name;
       el.dockTypeBadge.textContent = data.institution_type.toUpperCase();
@@ -839,27 +760,43 @@
           el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a>`;
         }
         el.dockPhone.className = 'fact-val';
+
+        if (el.btnActCall) {
+          el.btnActCall.href = `tel:${cleanPhone}`;
+          el.btnActCall.classList.remove('disabled');
+          el.btnActCall.removeAttribute('aria-disabled');
+          el.btnActCall.setAttribute('aria-label', `Call ${data.name} at ${cleanPhone}`);
+        }
       } else {
         el.dockPhone.textContent = 'NA';
         el.dockPhone.className = 'fact-val val-na';
-      }
-
-      if (data.email && data.email !== 'NA' && data.email !== 'Not Available') {
-        const cleanEmail = data.email.split('/')[0].trim();
-        el.dockEmail.innerHTML = `<a href="mailto:${escapeHtml(cleanEmail)}">${escapeHtml(data.email)}</a>`;
-        el.dockEmail.className = 'fact-val';
-      } else {
-        el.dockEmail.textContent = 'NA';
-        el.dockEmail.className = 'fact-val val-na';
+        if (el.btnActCall) {
+          el.btnActCall.removeAttribute('href');
+          el.btnActCall.classList.add('disabled');
+          el.btnActCall.setAttribute('aria-disabled', 'true');
+          el.btnActCall.setAttribute('aria-label', 'Phone number not available for this institution');
+        }
       }
 
       const safeWebUrl = sanitizeUrl(data.website);
       if (safeWebUrl) {
         el.dockWebsite.innerHTML = `<a href="${escapeHtml(safeWebUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.website)} ↗</a>`;
         el.dockWebsite.className = 'fact-val';
+        if (el.btnActWeb) {
+          el.btnActWeb.href = safeWebUrl;
+          el.btnActWeb.classList.remove('disabled');
+          el.btnActWeb.removeAttribute('aria-disabled');
+          el.btnActWeb.setAttribute('aria-label', `Visit official website of ${data.name}`);
+        }
       } else {
         el.dockWebsite.textContent = 'NA';
         el.dockWebsite.className = 'fact-val val-na';
+        if (el.btnActWeb) {
+          el.btnActWeb.removeAttribute('href');
+          el.btnActWeb.classList.add('disabled');
+          el.btnActWeb.setAttribute('aria-disabled', 'true');
+          el.btnActWeb.setAttribute('aria-label', 'Official website not available for this institution');
+        }
       }
 
       el.dockStrength.textContent = (data.student_strength && data.student_strength !== 'NA') ? data.student_strength : 'NA';
@@ -886,7 +823,6 @@
       }
       el.dockNotes.textContent = data.sources_notes || 'Official institution record';
 
-      // Pre-fill correction modal with current institution
       if (el.corrInstName) {
         el.corrInstName.value = `${data.name} (${data.udise_code || data.identifier || data.id})`;
       }
@@ -905,9 +841,65 @@
 
   function closeDetailDock() {
     state.selectedId = null;
+    state.currentInstitution = null;
     el.detailDock.classList.add('hidden');
     document.querySelectorAll('.index-row').forEach(r => r.classList.remove('selected'));
     updateUrlParams();
+  }
+
+  // Quick Action Button Handlers
+  if (el.btnActCall) {
+    el.btnActCall.addEventListener('click', (e) => {
+      if (el.btnActCall.classList.contains('disabled')) {
+        e.preventDefault();
+        showToast('ℹ️ Phone number not available on file');
+      }
+    });
+  }
+
+  if (el.btnActWeb) {
+    el.btnActWeb.addEventListener('click', (e) => {
+      if (el.btnActWeb.classList.contains('disabled')) {
+        e.preventDefault();
+        showToast('ℹ️ Official website not available on file');
+      }
+    });
+  }
+
+  if (el.btnActCopy) {
+    el.btnActCopy.addEventListener('click', () => {
+      if (!state.currentInstitution) return;
+      const d = state.currentInstitution;
+      const textCard = `🏛️ ${d.name} (${d.institution_type ? d.institution_type.toUpperCase() : 'INSTITUTION'})
+📍 Location: ${d.location && d.location !== 'NA' ? d.location : 'Not on file'}, ${d.block} Block
+🆔 UDISE/ID: ${d.udise_code || d.identifier || d.id}
+👤 Leadership: ${d.principal_name && d.principal_name !== 'NA' ? d.principal_name : (d.hm_name && d.hm_name !== 'NA' ? d.hm_name : 'Not on file')}
+📞 Phone: ${d.phone && d.phone !== 'NA' ? d.phone : 'Not on file'}
+✉️ Email: ${d.email && d.email !== 'NA' ? d.email : 'Not on file'}
+🌐 Website: ${d.website && d.website !== 'NA' ? d.website : 'Not on file'}
+🔗 View on Edu-Explore Cape: https://capeedudetails.me/?id=${d.id}`;
+      
+      copyTextToClipboard(textCard, '✓ Contact details copied to clipboard!');
+    });
+  }
+
+  if (el.btnActShare) {
+    el.btnActShare.addEventListener('click', () => {
+      if (!state.currentInstitution) return;
+      const d = state.currentInstitution;
+      const shareUrl = `https://capeedudetails.me/?id=${d.id}`;
+      if (navigator.share) {
+        navigator.share({
+          title: `${d.name} — Edu-Explore Cape`,
+          text: `Verified details for ${d.name} in Kanyakumari District.`,
+          url: shareUrl
+        }).catch(() => {
+          copyTextToClipboard(shareUrl, '🔗 Direct institution link copied to clipboard!');
+        });
+      } else {
+        copyTextToClipboard(shareUrl, '🔗 Direct institution link copied to clipboard!');
+      }
+    });
   }
 
   function applyUrlState() {
@@ -943,7 +935,6 @@
   el.btnResetView.addEventListener('click', resetDistrictView);
   el.btnExitBlock.addEventListener('click', resetDistrictView);
   el.zoomReset.addEventListener('click', resetDistrictView);
-  if (el.btnResetPositions) el.btnResetPositions.addEventListener('click', resetBlockPositions);
 
   el.zoomIn.addEventListener('click', () => {
     setViewBox(state.camera.x + state.camera.w * 0.1, state.camera.y + state.camera.h * 0.1, state.camera.w * 0.8, state.camera.h * 0.8);
@@ -980,6 +971,19 @@
     });
   });
 
+  el.kpiPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      el.kpiPills.forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed', 'false');
+      });
+      pill.classList.add('active');
+      pill.setAttribute('aria-pressed', 'true');
+      state.kpiFilter = pill.getAttribute('data-filter');
+      renderIndexView();
+    });
+  });
+
   let searchTimer = null;
   el.searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimer);
@@ -1009,14 +1013,19 @@
       el.searchClear.classList.add('hidden');
       state.searchQuery = '';
       state.filterType = 'all';
+      state.kpiFilter = 'all';
       el.pillBtns.forEach(b => {
         const isAll = (b.getAttribute('data-type') === 'all');
         b.classList.toggle('active', isAll);
         b.setAttribute('aria-pressed', isAll ? 'true' : 'false');
       });
+      el.kpiPills.forEach(p => {
+        p.classList.toggle('active', p.getAttribute('data-filter') === 'all');
+      });
       renderPlotNodes();
       renderIndexView();
       updateUrlParams();
+      showToast('Filters reset to show all 1,296 institutions');
     });
   }
 
@@ -1089,63 +1098,8 @@
       el.corrSuccess.classList.remove('hidden');
       setTimeout(() => {
         if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
-      }, 2500);
-    });
-  }
-
-  
-  // Theme Engine (No FOUC & LocalStorage Persistence)
-  function initTheme() {
-    const saved = localStorage.getItem('edu_explore_theme');
-    const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'midnight' : 'paper');
-    applyTheme(theme, false);
-  }
-
-  function applyTheme(theme, save = true) {
-    document.documentElement.className = 'theme-' + theme;
-    document.body.className = 'theme-' + theme;
-    if (save) {
-      localStorage.setItem('edu_explore_theme', theme);
-    }
-  }
-
-  function toggleTheme() {
-    const current = document.documentElement.classList.contains('theme-midnight') ? 'midnight' : 'paper';
-    const next = current === 'midnight' ? 'paper' : 'midnight';
-    applyTheme(next, true);
-  }
-
-  const btnThemeToggle = document.getElementById('btn-theme-toggle');
-  if (btnThemeToggle) {
-    btnThemeToggle.addEventListener('click', toggleTheme);
-  }
-
-    
-  // Mobile HUD Popover Toggle
-  const btnMobileHud = document.getElementById('btn-mobile-hud-toggle');
-  const popoverMobileHud = document.getElementById('mobile-hud-popover');
-  const btnCloseHudPopover = document.getElementById('btn-close-hud-popover');
-
-  if (btnMobileHud && popoverMobileHud) {
-    btnMobileHud.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = popoverMobileHud.classList.contains('hidden');
-      popoverMobileHud.classList.toggle('hidden', !isHidden);
-      btnMobileHud.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-    });
-
-    if (btnCloseHudPopover) {
-      btnCloseHudPopover.addEventListener('click', () => {
-        popoverMobileHud.classList.add('hidden');
-        btnMobileHud.setAttribute('aria-expanded', 'false');
-      });
-    }
-
-    window.addEventListener('click', (e) => {
-      if (!popoverMobileHud.classList.contains('hidden') && !e.target.closest('#mobile-hud-controls')) {
-        popoverMobileHud.classList.add('hidden');
-        btnMobileHud.setAttribute('aria-expanded', 'false');
-      }
+        showToast('✓ Correction submitted for verification review!');
+      }, 2000);
     });
   }
 

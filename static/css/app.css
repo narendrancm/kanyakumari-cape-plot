@@ -313,11 +313,9 @@ body {
 .svg-container {
   width: 100%;
   height: 100%;
-  cursor: grab;
+  cursor: default;
 }
-.svg-container:active {
-  cursor: grabbing;
-}
+
 
 #plot-svg {
   width: 100%;
@@ -356,10 +354,7 @@ body {
   border-color: var(--color-sea);
   color: var(--color-sea);
 }
-.btn-reset-pos {
-  color: var(--color-sea);
-  font-size: 18px;
-}
+
 
 .drag-hint {
   position: absolute;
@@ -464,17 +459,11 @@ body {
 
 /* 9-Block Boundaries (Draggable) */
 .block-cluster-group {
-  cursor: grab;
+  cursor: pointer;
   transition: opacity 200ms ease;
 }
-.block-cluster-group.is-dragging {
-  cursor: grabbing !important;
-}
-.block-cluster-group.is-dragging .block-boundary-ring {
-  stroke: var(--color-sea) !important;
-  stroke-width: 2.5px !important;
-  fill: rgba(31, 92, 87, 0.1) !important;
-}
+
+
 
 .block-boundary-ring {
   fill: rgba(243, 239, 230, 0.35);
