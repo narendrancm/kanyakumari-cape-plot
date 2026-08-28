@@ -73,12 +73,21 @@
       </a>
     </div>
 
-    <!-- Big Extended Search Bar -->
+    <!-- Extended Search Bar + Filter Shelf in Single Header -->
     <div class="header-center">
-      <div class="search-box big-search" role="search">
+      <div class="search-box extended-search" role="search">
         <span class="search-icon" aria-hidden="true">⌕</span>
-        <input type="text" id="search-input" placeholder="Search 1,296 schools, colleges, leadership, locations across Kanyakumari..." aria-label="Search institutions">
+        <input type="text" id="search-input" placeholder="Search 1,296 schools, colleges, leadership, locations..." aria-label="Search institutions">
         <button id="search-clear" class="search-clear-btn hidden" title="Clear Search" aria-label="Clear Search">✕</button>
+      </div>
+
+      <div class="header-filter-shelf" role="group" aria-label="Filter institutions">
+        <button class="filter-shelf-btn active" data-filter="all" id="filter-all">All (1,296)</button>
+        <button class="filter-shelf-btn" data-filter="schools" id="filter-schools">Schools (1,213)</button>
+        <button class="filter-shelf-btn" data-filter="colleges" id="filter-colleges">Colleges (83)</button>
+        <button class="filter-shelf-btn" data-filter="govt" id="filter-govt">Govt (482)</button>
+        <button class="filter-shelf-btn" data-filter="aided" id="filter-aided">Aided (418)</button>
+        <button class="filter-shelf-btn" data-filter="verified" id="filter-verified">Verified (797)</button>
       </div>
     </div>
 
@@ -104,19 +113,6 @@
       </div>
     </div>
   </header>
-
-  <!-- Dedicated Horizontal Category Filter Ribbon -->
-  <nav id="category-filter-ribbon" class="filter-ribbon" role="toolbar" aria-label="Filter institutions by category">
-    <div class="filter-ribbon-track">
-      <span class="filter-ribbon-label">Filter:</span>
-      <button class="ribbon-btn active" data-filter="all" id="filter-all">All (1,296)</button>
-      <button class="ribbon-btn" data-filter="schools" id="filter-schools">Schools (1,213)</button>
-      <button class="ribbon-btn" data-filter="colleges" id="filter-colleges">Colleges (83)</button>
-      <button class="ribbon-btn" data-filter="govt" id="filter-govt">Government (482)</button>
-      <button class="ribbon-btn" data-filter="aided" id="filter-aided">Private-Aided (418)</button>
-      <button class="ribbon-btn" data-filter="verified" id="filter-verified">Verified (797)</button>
-    </div>
-  </nav>
 
   <!-- Main Viewport Area (Desktop Split Container) -->
   <main id="app-viewport" class="split-viewport" role="main">

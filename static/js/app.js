@@ -1037,10 +1037,11 @@
   
   
   
-  // Filter Ribbon Buttons Listener (Schools, Colleges, Govt, Aided, Verified)
-  document.querySelectorAll('.ribbon-btn').forEach(btn => {
+  
+  // Header Filter Shelf Buttons Listener (All, Schools, Colleges, Govt, Aided, Verified)
+  document.querySelectorAll('.filter-shelf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.ribbon-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.filter-shelf-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.filterType = btn.getAttribute('data-filter') || 'all';
       renderPlotNodes();

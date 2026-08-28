@@ -987,61 +987,17 @@ body {
   font-size: 14px;
 }
 
-/* Dedicated Horizontal Filter Ribbon */
-.filter-ribbon {
-  height: var(--ribbon-height);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  z-index: 90;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-}
 
-.filter-ribbon-track {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  width: 100%;
-  padding: 2px 0;
-}
 
-.filter-ribbon-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--color-ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-right: 4px;
-}
 
-.ribbon-btn {
-  background: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  padding: 5px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-ink-secondary);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 140ms ease;
-}
 
-.ribbon-btn:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-sea);
-  color: var(--color-sea);
-}
 
-.ribbon-btn.active {
-  background: var(--color-sea);
-  border-color: var(--color-sea);
-  color: #FFFFFF;
-  box-shadow: var(--shadow-sm);
-}
+
+
+
+
+
+
 
 /* Split Viewport height adjustment for Ribbon */
 .split-viewport {
@@ -1051,5 +1007,120 @@ body {
 @media (max-width: 899px) {
   .split-viewport {
     height: calc(100vh - var(--header-height) - var(--ribbon-height) - var(--footer-height));
+  }
+}
+
+:root {
+  --header-height: 60px;
+  --footer-height: 38px;
+}
+
+#app-header {
+  height: var(--header-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 100;
+}
+
+.header-center {
+  flex: 1;
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-box.extended-search {
+  flex: 1;
+  min-width: 260px;
+  max-width: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box.extended-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  transition: all 150ms ease;
+}
+
+.search-box.extended-search input:focus {
+  border-color: var(--color-sea);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(31, 92, 87, 0.12);
+}
+
+.search-box.extended-search .search-icon {
+  position: absolute;
+  left: 11px;
+  font-size: 14px;
+  color: var(--color-ink-muted);
+}
+
+.search-box.extended-search .search-clear-btn {
+  position: absolute;
+  right: 10px;
+  font-size: 12px;
+}
+
+/* Header Filter Shelf */
+.header-filter-shelf {
+  display: flex;
+  gap: 4px;
+  background: var(--color-canvas);
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.filter-shelf-btn {
+  background: none;
+  border: none;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 140ms ease;
+}
+
+.filter-shelf-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-sea);
+}
+
+.filter-shelf-btn.active {
+  background: #FFFFFF;
+  color: var(--color-sea);
+  box-shadow: var(--shadow-sm);
+}
+
+.split-viewport {
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+@media (max-width: 899px) {
+  .split-viewport {
+    height: calc(100vh - var(--header-height) - var(--footer-height));
+  }
+  .header-filter-shelf {
+    display: none;
   }
 }
