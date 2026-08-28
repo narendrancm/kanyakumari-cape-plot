@@ -1296,3 +1296,39 @@ body.theme-paper .icon-moon {
     animation: none !important;
   }
 }
+
+/* Instant Point Hover Label with High-Contrast White Backdrop */
+.node-hover-label-bg {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  stroke: #FFFFFF;
+  stroke-width: 4.5px;
+  stroke-linejoin: round;
+  fill: #FFFFFF;
+  pointer-events: none;
+  paint-order: stroke fill;
+}
+.node-hover-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  fill: var(--color-ink);
+  pointer-events: none;
+}
+
+/* Draggable Block Clusters */
+.block-cluster-group {
+  cursor: grab;
+  transition: opacity 200ms ease;
+}
+.block-cluster-group.is-dragging {
+  cursor: grabbing !important;
+}
+.block-cluster-group.is-dragging .block-boundary-ring {
+  stroke: var(--color-sea) !important;
+  stroke-width: 2.5px !important;
+  fill: var(--color-sea-soft) !important;
+}

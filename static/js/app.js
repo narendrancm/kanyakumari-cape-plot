@@ -1,8 +1,10 @@
 // Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer
-// Natural Organic Cluster Layout & Instant Hover Navigation
+// Natural Organic Cluster Layout, Instant Point Hover & Direct-Track Block Dragging
 
 (function () {
   'use strict';
+
+  const STORAGE_KEY = 'cape_plot_block_positions_v3';
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -82,6 +84,7 @@
     searchQuery: '',
     currentInstitution: null,
     blocks: [],
+    defaultBlocks: [],
     institutions: [],
     institutionsMap: new Map(),
     camera: {
@@ -96,6 +99,14 @@
       isPanning: false,
       startX: 0,
       startY: 0
+    },
+    drag: {
+      isDragging: false,
+      blockName: null,
+      offsetX: 0,
+      offsetY: 0,
+      hasMoved: false,
+      nodesOffset: new Map()
     }
   };
 
@@ -118,10 +129,6 @@
     layerLines: document.getElementById('layer-lines'),
     layerNodes: document.getElementById('layer-nodes'),
     layerOverlays: document.getElementById('layer-overlays'),
-    nodeHoverCard: document.getElementById('node-hover-card'),
-    hoverCardTitle: document.getElementById('hover-card-title'),
-    hoverCardSub: document.getElementById('hover-card-sub'),
-    hoverCardBadge: document.getElementById('hover-card-badge'),
 
     activeBlockPill: document.getElementById('active-block-pill'),
     activeBlockName: document.getElementById('active-block-name'),
@@ -175,10 +182,15 @@
     corrSuccess: document.getElementById('corr-success')
   };
 
-  // Performance & Battery: Pause canvas animations when tab is hidden
-  document.addEventListener('visibilitychange', () => {
-    document.body.classList.toggle('is-tab-hidden', document.hidden);
-  });
+  // Convert screen coordinates to SVG space
+  function screenToSvg(clientX, clientY) {
+    const pt = el.plotSvg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const ctm = el.plotSvg.getScreenCTM();
+    if (!ctm) return { x: clientX, y: clientY };
+    return pt.matrixTransform(ctm.inverse());
+  }
 
   function readUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -202,12 +214,50 @@
     window.history.replaceState({}, '', newUrl);
   }
 
+  function loadCustomBlockPositions() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const posMap = JSON.parse(saved);
+      state.blocks.forEach(b => {
+        if (posMap[b.name]) {
+          const deltaX = posMap[b.name].cx - b.cx;
+          const deltaY = posMap[b.name].cy - b.cy;
+          b.cx = posMap[b.name].cx;
+          b.cy = posMap[b.name].cy;
+
+          state.institutions.forEach(inst => {
+            if (inst.block === b.name) {
+              inst.schematic_x += deltaX;
+              inst.schematic_y += deltaY;
+            }
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Could not load custom positions:', e);
+    }
+  }
+
+  function saveCustomBlockPositions() {
+    try {
+      const posMap = {};
+      state.blocks.forEach(b => {
+        posMap[b.name] = { cx: b.cx, cy: b.cy };
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posMap));
+    } catch (e) {
+      console.warn('Could not save positions:', e);
+    }
+  }
+
   async function initData() {
     try {
       const resBlocks = await fetch('/api/blocks');
       if (!resBlocks.ok) throw new Error('Blocks API failure');
       const dataBlocks = await resBlocks.json();
       state.blocks = dataBlocks.blocks;
+      state.defaultBlocks = JSON.parse(JSON.stringify(dataBlocks.blocks));
 
       const resInst = await fetch('/api/institutions?limit=1500');
       if (!resInst.ok) throw new Error('Institutions API failure');
@@ -215,8 +265,12 @@
       state.institutions = dataInst.institutions;
 
       state.institutions.forEach(inst => {
+        inst.base_x = inst.schematic_x;
+        inst.base_y = inst.schematic_y;
         state.institutionsMap.set(inst.id, inst);
       });
+
+      loadCustomBlockPositions();
 
       renderPlotBlocks();
       renderPlotNodes();
@@ -272,6 +326,7 @@
       circle.setAttribute('cy', b.cy);
       circle.setAttribute('r', b.r);
       circle.setAttribute('class', `block-boundary-ring ${isCenter ? 'ring-center' : ''}`);
+      circle.setAttribute('id', `ring-${b.name}`);
 
       if (isCenter) {
         const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -282,6 +337,7 @@
         innerCircle.setAttribute('stroke', 'var(--color-ring-stroke)');
         innerCircle.setAttribute('stroke-width', '1');
         innerCircle.setAttribute('stroke-dasharray', '2 3');
+        innerCircle.setAttribute('id', `inner-ring-${b.name}`);
         g.appendChild(innerCircle);
       }
 
@@ -289,20 +345,30 @@
       text.setAttribute('x', b.cx);
       text.setAttribute('y', b.cy - b.r - 8);
       text.setAttribute('class', `block-label-text ${isCenter ? 'text-center-hub' : ''}`);
+      text.setAttribute('id', `label-${b.name}`);
       text.textContent = isCenter ? 'KANYAKUMARI · AGASTEESWARAM' : b.name.toUpperCase();
 
       const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       sub.setAttribute('x', b.cx);
       sub.setAttribute('y', b.cy - b.r + 4);
       sub.setAttribute('class', 'block-sub-count');
+      sub.setAttribute('id', `sub-${b.name}`);
       sub.textContent = `${b.total_count} inst · ${b.taluk}`;
 
       g.appendChild(circle);
       g.appendChild(text);
       g.appendChild(sub);
 
-      // Clean block click: zoom directly to block without dragging checks
+      // Block dragging initiation on mousedown (if not clicking directly on a school node)
+      g.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.inst-node')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        startBlockDrag(b, e);
+      });
+
       g.addEventListener('click', (e) => {
+        if (state.drag.hasMoved) return;
         if (e.target.closest('.inst-node')) return;
         e.stopPropagation();
         zoomToBlock(b.name);
@@ -328,6 +394,90 @@
       line.setAttribute('id', `line-${b.name}`);
       el.layerLines.appendChild(line);
     });
+  }
+
+  function startBlockDrag(block, e) {
+    state.drag.isDragging = true;
+    state.drag.blockName = block.name;
+    state.drag.hasMoved = false;
+
+    const svgPt = screenToSvg(e.clientX, e.clientY);
+    state.drag.offsetX = svgPt.x - block.cx;
+    state.drag.offsetY = svgPt.y - block.cy;
+
+    state.drag.nodesOffset.clear();
+    state.institutions.forEach(inst => {
+      if (inst.block === block.name) {
+        state.drag.nodesOffset.set(inst.id, {
+          relX: inst.schematic_x - block.cx,
+          relY: inst.schematic_y - block.cy
+        });
+      }
+    });
+
+    const grp = document.getElementById(`block-grp-${block.name}`);
+    if (grp) grp.classList.add('is-dragging');
+  }
+
+  function onBlockDragMove(e) {
+    if (!state.drag.isDragging) return;
+
+    state.drag.hasMoved = true;
+    const b = state.blocks.find(bl => bl.name === state.drag.blockName);
+    if (!b) return;
+
+    const svgPt = screenToSvg(e.clientX, e.clientY);
+    
+    b.cx = svgPt.x - state.drag.offsetX;
+    b.cy = svgPt.y - state.drag.offsetY;
+
+    const ring = document.getElementById(`ring-${b.name}`);
+    if (ring) { ring.setAttribute('cx', b.cx); ring.setAttribute('cy', b.cy); }
+    const innerRing = document.getElementById(`inner-ring-${b.name}`);
+    if (innerRing) { innerRing.setAttribute('cx', b.cx); innerRing.setAttribute('cy', b.cy); }
+    const label = document.getElementById(`label-${b.name}`);
+    if (label) { label.setAttribute('x', b.cx); label.setAttribute('y', b.cy - b.r - 8); }
+    const sub = document.getElementById(`sub-${b.name}`);
+    if (sub) { sub.setAttribute('x', b.cx); sub.setAttribute('y', b.cy - b.r + 4); }
+
+    state.institutions.forEach(inst => {
+      if (inst.block === b.name) {
+        const offset = state.drag.nodesOffset.get(inst.id);
+        if (offset) {
+          inst.schematic_x = b.cx + offset.relX;
+          inst.schematic_y = b.cy + offset.relY;
+
+          const nodeEl = document.querySelector(`.inst-node[data-id="${inst.id}"]`);
+          if (nodeEl) {
+            const mark = nodeEl.querySelector('.node-mark');
+            if (mark) {
+              if (inst.institution_type === 'school') {
+                mark.setAttribute('cx', inst.schematic_x);
+                mark.setAttribute('cy', inst.schematic_y);
+              } else {
+                mark.setAttribute('x', inst.schematic_x - 3.5);
+                mark.setAttribute('y', inst.schematic_y - 3.5);
+              }
+            }
+          }
+        }
+      }
+    });
+
+    updateConnectingLines();
+  }
+
+  function onBlockDragEnd() {
+    if (!state.drag.isDragging) return;
+
+    const grp = document.getElementById(`block-grp-${state.drag.blockName}`);
+    if (grp) grp.classList.remove('is-dragging');
+
+    if (state.drag.hasMoved) {
+      saveCustomBlockPositions();
+    }
+
+    state.drag.isDragging = false;
   }
 
   function renderPlotNodes() {
@@ -362,13 +512,13 @@
 
       g.appendChild(mark);
 
-      // Instant hover event: show school name immediately
-      g.addEventListener('mouseenter', (e) => handleNodeHover(inst, g, e));
-      g.addEventListener('mousemove', (e) => handleNodeHover(inst, g, e));
+      // Instant point hover event: paints school name directly on SVG overlay canvas
+      g.addEventListener('mouseenter', () => handleNodeHover(inst, g));
+      g.addEventListener('mousemove', () => handleNodeHover(inst, g));
       g.addEventListener('mouseleave', () => handleNodeLeave());
 
       // Keyboard focus support
-      g.addEventListener('focus', () => handleNodeFocus(inst, g));
+      g.addEventListener('focus', () => handleNodeHover(inst, g));
       g.addEventListener('blur', () => handleNodeLeave());
 
       g.addEventListener('click', (e) => {
@@ -387,65 +537,35 @@
     });
   }
 
-  function handleNodeHover(inst, nodeGroup, e) {
-    el.layerNodes.style.opacity = '0.65';
+  // Instant on-canvas SVG hover label with clean high-contrast white outline
+  function handleNodeHover(inst, nodeGroup) {
+    el.layerOverlays.innerHTML = '';
+    el.layerNodes.style.opacity = '0.55';
     nodeGroup.style.opacity = '1.0';
 
-    if (el.nodeHoverCard) {
-      el.hoverCardTitle.textContent = inst.name;
-      el.hoverCardSub.textContent = `${inst.category} · ${inst.block}`;
-      if (inst.verification_status && inst.verification_status.includes('Verified')) {
-        el.hoverCardBadge.textContent = '🛡️ Verified';
-        el.hoverCardBadge.className = 'hover-card-badge';
-      } else {
-        el.hoverCardBadge.textContent = inst.institution_type === 'college' ? '🎓 College' : '🏫 School';
-        el.hoverCardBadge.className = 'hover-card-badge';
-      }
-      
-      const rect = el.svgContainer.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      el.nodeHoverCard.style.left = `${Math.min(rect.width - 310, Math.max(10, x + 12))}px`;
-      el.nodeHoverCard.style.top = `${Math.min(rect.height - 70, Math.max(30, y))}px`;
-      el.nodeHoverCard.classList.remove('hidden');
-    }
-  }
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'svg-hover-tooltip');
 
-  function handleNodeFocus(inst, nodeGroup) {
-    el.layerNodes.style.opacity = '0.65';
-    nodeGroup.style.opacity = '1.0';
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    bg.setAttribute('x', inst.schematic_x + 9);
+    bg.setAttribute('y', inst.schematic_y + 3.5);
+    bg.setAttribute('class', 'node-hover-label-bg');
+    bg.textContent = `${inst.name} (${inst.category})`;
 
-    if (el.nodeHoverCard) {
-      el.hoverCardTitle.textContent = inst.name;
-      el.hoverCardSub.textContent = `${inst.category} · ${inst.block}`;
-      if (inst.verification_status && inst.verification_status.includes('Verified')) {
-        el.hoverCardBadge.textContent = '🛡️ Verified';
-        el.hoverCardBadge.className = 'hover-card-badge';
-      } else {
-        el.hoverCardBadge.textContent = inst.institution_type === 'college' ? '🎓 College' : '🏫 School';
-        el.hoverCardBadge.className = 'hover-card-badge';
-      }
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', inst.schematic_x + 9);
+    text.setAttribute('y', inst.schematic_y + 3.5);
+    text.setAttribute('class', 'node-hover-label');
+    text.textContent = `${inst.name} (${inst.category})`;
 
-      const pt = el.plotSvg.createSVGPoint();
-      pt.x = inst.schematic_x;
-      pt.y = inst.schematic_y;
-      const ctm = el.plotSvg.getScreenCTM();
-      if (ctm) {
-        const screenPt = pt.matrixTransform(ctm);
-        const rect = el.svgContainer.getBoundingClientRect();
-        const x = screenPt.x - rect.left;
-        const y = screenPt.y - rect.top;
-        el.nodeHoverCard.style.left = `${Math.min(rect.width - 310, Math.max(10, x + 15))}px`;
-        el.nodeHoverCard.style.top = `${Math.min(rect.height - 70, Math.max(30, y))}px`;
-        el.nodeHoverCard.classList.remove('hidden');
-      }
-    }
+    g.appendChild(bg);
+    g.appendChild(text);
+    el.layerOverlays.appendChild(g);
   }
 
   function handleNodeLeave() {
+    el.layerOverlays.innerHTML = '';
     el.layerNodes.style.opacity = '1.0';
-    if (el.nodeHoverCard) el.nodeHoverCard.classList.add('hidden');
   }
 
   function setViewBox(x, y, w, h, animated = true) {
@@ -519,6 +639,11 @@
   });
 
   window.addEventListener('mousemove', (e) => {
+    if (state.drag.isDragging) {
+      onBlockDragMove(e);
+      return;
+    }
+
     if (!state.camera.isPanning) return;
     const dx = (e.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
     const dy = (e.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
@@ -534,12 +659,26 @@
   });
 
   window.addEventListener('mouseup', () => {
+    if (state.drag.isDragging) {
+      onBlockDragEnd();
+    }
     state.camera.isPanning = false;
   });
 
   el.svgContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
+      const targetBlock = e.target.closest('.block-cluster-group');
+      if (targetBlock && !e.target.closest('.inst-node')) {
+        const blockName = targetBlock.getAttribute('data-block');
+        const b = state.blocks.find(bl => bl.name === blockName);
+        if (b) {
+          e.preventDefault();
+          startBlockDrag(b, touch);
+          return;
+        }
+      }
+
       state.camera.isPanning = true;
       state.camera.startX = touch.clientX;
       state.camera.startY = touch.clientY;
@@ -547,21 +686,31 @@
   }, { passive: false });
 
   el.svgContainer.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1 && state.camera.isPanning) {
+    if (e.touches.length === 1) {
       const touch = e.touches[0];
-      const dx = (touch.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
-      const dy = (touch.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
-      state.camera.targetX -= dx;
-      state.camera.targetY -= dy;
-      state.camera.x -= dx;
-      state.camera.y -= dy;
-      el.plotSvg.setAttribute('viewBox', `${state.camera.x} ${state.camera.y} ${state.camera.w} ${state.camera.h}`);
-      state.camera.startX = touch.clientX;
-      state.camera.startY = touch.clientY;
+      if (state.drag.isDragging) {
+        e.preventDefault();
+        onBlockDragMove(touch);
+        return;
+      }
+      if (state.camera.isPanning) {
+        const dx = (touch.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
+        const dy = (touch.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
+        state.camera.targetX -= dx;
+        state.camera.targetY -= dy;
+        state.camera.x -= dx;
+        state.camera.y -= dy;
+        el.plotSvg.setAttribute('viewBox', `${state.camera.x} ${state.camera.y} ${state.camera.w} ${state.camera.h}`);
+        state.camera.startX = touch.clientX;
+        state.camera.startY = touch.clientY;
+      }
     }
   }, { passive: false });
 
   el.svgContainer.addEventListener('touchend', () => {
+    if (state.drag.isDragging) {
+      onBlockDragEnd();
+    }
     state.camera.isPanning = false;
   });
 
