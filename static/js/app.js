@@ -9,8 +9,8 @@
       brandTitle: "EDU-EXPLORE CAPE",
       brandSubtitle: "Kanyakumari Educational Directory",
       pillAll: "All (1,296)",
-      pillSchools: "● Schools (1,213)",
-      pillColleges: "■ Colleges (83)",
+      pillSchools: "Schools (1,213)",
+      pillColleges: "Colleges (83)",
       searchPlaceholder: "Search 1,296 schools, colleges, leadership, locations...",
       viewMap: "Map",
       viewList: "List"
@@ -19,8 +19,8 @@
       brandTitle: "எடு-எக்ஸ்ப்ளோர் கேப்",
       brandSubtitle: "கன்னியாகுமரி மாவட்ட கல்வி வழிகாட்டி",
       pillAll: "அனைத்தும் (1,296)",
-      pillSchools: "● பள்ளிகள் (1,213)",
-      pillColleges: "■ கல்லூரிகள் (83)",
+      pillSchools: "பள்ளிகள் (1,213)",
+      pillColleges: "கல்லூரிகள் (83)",
       searchPlaceholder: "1,296 பள்ளிகள், கல்லூரிகள், நிர்வாகிகளைத் தேடுக...",
       viewMap: "வரைபடம்",
       viewList: "பட்டியல்"
@@ -214,8 +214,8 @@
     if (el.lblBrandTitle) el.lblBrandTitle.textContent = dict.brandTitle;
     if (el.lblBrandSubtitle) el.lblBrandSubtitle.textContent = dict.brandSubtitle;
     if (el.filterAll) el.filterAll.textContent = dict.pillAll;
-    if (el.filterSchools) el.filterSchools.innerHTML = `<span class="filter-dot-school"></span> ${dict.pillSchools}`;
-    if (el.filterColleges) el.filterColleges.innerHTML = `<span class="filter-dot-college"></span> ${dict.pillColleges}`;
+    if (el.filterSchools) el.filterSchools.textContent = dict.pillSchools;
+    if (el.filterColleges) el.filterColleges.textContent = dict.pillColleges;
     if (el.searchInput) el.searchInput.placeholder = dict.searchPlaceholder;
     if (el.viewPlotBtn) el.viewPlotBtn.textContent = dict.viewMap;
     if (el.viewIndexBtn) el.viewIndexBtn.textContent = dict.viewList;
@@ -404,40 +404,79 @@
     return list;
   }
 
-  // Render Institution Nodes on Map
+  // Render Institution Nodes on Map (Schools = Circles, Colleges = Squares)
   function renderPlotNodes() {
+    if (!el.layerNodes) return;
     el.layerNodes.innerHTML = '';
     const filtered = getFilteredInstitutions();
 
+    let renderedCount = 0;
     filtered.forEach(inst => {
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', inst.svg_x);
-      circle.setAttribute('cy', inst.svg_y);
-      circle.setAttribute('r', inst.institution_type === 'college' ? '3.8' : '2.4');
-      circle.setAttribute('class', `node-dot type-${inst.institution_type} ${state.selectedId === inst.id ? 'selected pulsing' : ''}`);
-      circle.setAttribute('data-id', inst.id);
-      circle.setAttribute('id', `node-${inst.id}`);
+      const x = Number(inst.svg_x !== undefined && inst.svg_x !== null ? inst.svg_x : inst.schematic_x);
+      const y = Number(inst.svg_y !== undefined && inst.svg_y !== null ? inst.svg_y : inst.schematic_y);
 
-      circle.addEventListener('mouseenter', () => showNodeHoverCard(inst));
-      circle.addEventListener('mouseleave', () => hideNodeHoverCard());
-      circle.addEventListener('click', (e) => {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || x <= 0 || y <= 0) {
+        return; // Skip invalid coordinates
+      }
+
+      const isSelected = state.selectedId === inst.id;
+      let shape;
+
+      if (inst.institution_type === 'college') {
+        // Colleges: Small square marker
+        shape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        const size = isSelected ? 8 : 6;
+        shape.setAttribute('x', String(x - size / 2));
+        shape.setAttribute('y', String(y - size / 2));
+        shape.setAttribute('width', String(size));
+        shape.setAttribute('height', String(size));
+        shape.setAttribute('rx', '1.2');
+      } else {
+        // Schools: Small circular marker
+        shape = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        shape.setAttribute('cx', String(x));
+        shape.setAttribute('cy', String(y));
+        shape.setAttribute('r', isSelected ? '4.5' : '2.6');
+      }
+
+      shape.setAttribute('class', `node-dot type-${inst.institution_type} ${isSelected ? 'selected pulsing' : ''}`);
+      shape.setAttribute('data-id', inst.id);
+      shape.setAttribute('id', `node-${inst.id}`);
+      shape.setAttribute('role', 'button');
+      shape.setAttribute('tabindex', '0');
+      shape.setAttribute('aria-label', `${inst.name}, ${inst.institution_type}`);
+
+      shape.addEventListener('mouseenter', () => showNodeHoverCard(inst, x, y));
+      shape.addEventListener('mouseleave', () => hideNodeHoverCard());
+      shape.addEventListener('click', (e) => {
         e.stopPropagation();
         selectInstitution(inst.id);
       });
 
-      el.layerNodes.appendChild(circle);
+      el.layerNodes.appendChild(shape);
+      renderedCount++;
     });
+
+    // Diagnostic logging for QA
+    console.log(`[Edu-Explore Cape Map Diagnostics]
+Total institutions: ${state.institutions.length}
+Filtered institutions: ${filtered.length}
+Visible map markers rendered: ${renderedCount}`);
   }
 
-  function showNodeHoverCard(inst) {
+  function showNodeHoverCard(inst, x, y) {
+    if (!el.layerOverlays) return;
     el.layerOverlays.innerHTML = '';
+    const posX = x !== undefined ? x : Number(inst.svg_x || inst.schematic_x);
+    const posY = y !== undefined ? y : Number(inst.svg_y || inst.schematic_y);
+
     const card = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     card.setAttribute('class', 'node-hover-tooltip');
     card.setAttribute('pointer-events', 'none');
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', inst.svg_x - 100);
-    rect.setAttribute('y', inst.svg_y - 45);
+    rect.setAttribute('x', String(posX - 100));
+    rect.setAttribute('y', String(posY - 45));
     rect.setAttribute('width', '200');
     rect.setAttribute('height', '38');
     rect.setAttribute('rx', '5');
@@ -445,8 +484,8 @@
     rect.setAttribute('opacity', '0.94');
 
     const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text1.setAttribute('x', inst.svg_x);
-    text1.setAttribute('y', inst.svg_y - 28);
+    text1.setAttribute('x', String(posX));
+    text1.setAttribute('y', String(posY - 28));
     text1.setAttribute('fill', '#FFFFFF');
     text1.setAttribute('font-size', '10.5');
     text1.setAttribute('font-weight', '700');
@@ -455,8 +494,8 @@
     text1.textContent = name.length > 28 ? name.substring(0, 26) + '...' : name;
 
     const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text2.setAttribute('x', inst.svg_x);
-    text2.setAttribute('y', inst.svg_y - 15);
+    text2.setAttribute('x', String(posX));
+    text2.setAttribute('y', String(posY - 15));
     text2.setAttribute('fill', '#B0AFA8');
     text2.setAttribute('font-size', '9');
     text2.setAttribute('text-anchor', 'middle');

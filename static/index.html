@@ -435,11 +435,11 @@
         </button>
       </div>
 
-      <!-- Single Primary Segmented Filter Shelf -->
+      <!-- Single Primary Segmented Filter Shelf (Clean text labels, no symbols/emojis) -->
       <nav class="header-filter-shelf" role="toolbar" aria-label="Institution Category Filters">
         <button class="filter-segment active" data-filter="all" id="filter-all">All (1,296)</button>
-        <button class="filter-segment" data-filter="schools" id="filter-schools"><span class="filter-dot-school"></span> Schools (1,213)</button>
-        <button class="filter-segment" data-filter="colleges" id="filter-colleges"><span class="filter-dot-college"></span> Colleges (83)</button>
+        <button class="filter-segment" data-filter="schools" id="filter-schools">Schools (1,213)</button>
+        <button class="filter-segment" data-filter="colleges" id="filter-colleges">Colleges (83)</button>
         <button class="filter-segment" data-filter="govt" id="filter-govt">Govt</button>
         <button class="filter-segment" data-filter="aided" id="filter-aided">Aided</button>
         <button class="filter-segment" data-filter="verified" id="filter-verified">Verified</button>
@@ -520,6 +520,12 @@
         <button id="zoom-reset" class="ctrl-btn" title="Reset District View" aria-label="Reset District View">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
         </button>
+      </div>
+
+            <!-- Map Legend (On map canvas only) -->
+      <div class="map-legend" role="note" aria-label="Map Marker Legend">
+        <span class="legend-item"><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#1F5C57" stroke="#FFF" stroke-width="1"/></svg> Schools</span>
+        <span class="legend-item"><svg width="10" height="10" viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1.5" fill="#9E5B28" stroke="#FFF" stroke-width="1"/></svg> Colleges</span>
       </div>
 
       <!-- Active Block Breadcrumb -->

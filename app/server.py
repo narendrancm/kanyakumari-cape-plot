@@ -166,10 +166,10 @@ def get_institutions(
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"""
         SELECT 
-            institution_type, id, identifier, name, block, taluk,
+            institution_type, id, identifier, name, name_ta, block, taluk,
             category, management_type, medium, location, principal_name,
             phone, email, website, student_strength, verification_status,
-            sources_notes, schematic_x, schematic_y
+            sources_notes, schematic_x, schematic_y, latitude, longitude
         FROM institutions_master
         {where_clause}
         ORDER BY name ASC
@@ -177,7 +177,14 @@ def get_institutions(
     """
     params.append(limit)
     cursor.execute(sql, params)
-    rows = [dict(r) for r in cursor.fetchall()]
+    raw_rows = cursor.fetchall()
+    rows = []
+    for r in raw_rows:
+        d = dict(r)
+        # Ensure svg_x and svg_y are mapped to schematic coordinates for vector map rendering
+        d["svg_x"] = d.get("schematic_x")
+        d["svg_y"] = d.get("schematic_y")
+        rows.append(d)
     conn.close()
     
     return {
