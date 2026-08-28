@@ -1036,10 +1036,11 @@
 
   
   
-  // Top Primary Filter Bar Listener (Clean & Professional, No Emojis)
-  document.querySelectorAll('.top-filter-btn').forEach(btn => {
+  
+  // Filter Ribbon Buttons Listener (Schools, Colleges, Govt, Aided, Verified)
+  document.querySelectorAll('.ribbon-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.top-filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.ribbon-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.filterType = btn.getAttribute('data-filter') || 'all';
       renderPlotNodes();
