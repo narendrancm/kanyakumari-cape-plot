@@ -670,6 +670,34 @@
     setViewBox(newX, newY, newW, newH, true);
   }, { passive: false });
 
+  
+  // Dynamic KPI Count Recalculation (Phase 5)
+  function updateKpiBadgeCounts(subset) {
+    const totalCount = subset.length;
+    const schoolsCount = subset.filter(i => i.institution_type === 'school').length;
+    const collegesCount = subset.filter(i => i.institution_type === 'college').length;
+    const govtCount = subset.filter(i => i.management_type && i.management_type.toLowerCase().includes('government')).length;
+    const aidedCount = subset.filter(i => i.management_type && i.management_type.toLowerCase().includes('aided')).length;
+    const verifiedCount = subset.filter(i => i.verification_status && i.verification_status.includes('Verified')).length;
+
+    const countMap = {
+      'all': totalCount,
+      'schools': schoolsCount,
+      'colleges': collegesCount,
+      'govt': govtCount,
+      'aided': aidedCount,
+      'verified': verifiedCount
+    };
+
+    el.kpiPills.forEach(pill => {
+      const filterKey = pill.getAttribute('data-filter');
+      const countEl = pill.querySelector('.kpi-count');
+      if (countEl && countMap[filterKey] !== undefined) {
+        countEl.textContent = countMap[filterKey].toLocaleString();
+      }
+    });
+  }
+
   function getFilteredInstitutions() {
     let list = state.institutions;
     if (state.filterType !== 'all') {
@@ -691,6 +719,25 @@
 
   function renderIndexView() {
     el.indexContent.innerHTML = '';
+
+    // Dynamically compute counts against active search & type query
+    let baseSubset = state.institutions;
+    if (state.filterType !== 'all') {
+      baseSubset = baseSubset.filter(i => i.institution_type === state.filterType);
+    }
+    if (state.searchQuery.trim()) {
+      const q = state.searchQuery.trim().toLowerCase();
+      baseSubset = baseSubset.filter(i => 
+        i.name.toLowerCase().includes(q) ||
+        i.block.toLowerCase().includes(q) ||
+        i.location.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q) ||
+        (i.principal_name && i.principal_name.toLowerCase().includes(q)) ||
+        (i.identifier && i.identifier.includes(q))
+      );
+    }
+    updateKpiBadgeCounts(baseSubset);
+
     const filtered = getFilteredInstitutions();
 
     if (filtered.length === 0) {
@@ -1043,6 +1090,63 @@
       setTimeout(() => {
         if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
       }, 2500);
+    });
+  }
+
+  
+  // Theme Engine (No FOUC & LocalStorage Persistence)
+  function initTheme() {
+    const saved = localStorage.getItem('edu_explore_theme');
+    const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'midnight' : 'paper');
+    applyTheme(theme, false);
+  }
+
+  function applyTheme(theme, save = true) {
+    document.documentElement.className = 'theme-' + theme;
+    document.body.className = 'theme-' + theme;
+    if (save) {
+      localStorage.setItem('edu_explore_theme', theme);
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.classList.contains('theme-midnight') ? 'midnight' : 'paper';
+    const next = current === 'midnight' ? 'paper' : 'midnight';
+    applyTheme(next, true);
+  }
+
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener('click', toggleTheme);
+  }
+
+  initTheme();
+  
+  // Mobile HUD Popover Toggle
+  const btnMobileHud = document.getElementById('btn-mobile-hud-toggle');
+  const popoverMobileHud = document.getElementById('mobile-hud-popover');
+  const btnCloseHudPopover = document.getElementById('btn-close-hud-popover');
+
+  if (btnMobileHud && popoverMobileHud) {
+    btnMobileHud.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = popoverMobileHud.classList.contains('hidden');
+      popoverMobileHud.classList.toggle('hidden', !isHidden);
+      btnMobileHud.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    });
+
+    if (btnCloseHudPopover) {
+      btnCloseHudPopover.addEventListener('click', () => {
+        popoverMobileHud.classList.add('hidden');
+        btnMobileHud.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    window.addEventListener('click', (e) => {
+      if (!popoverMobileHud.classList.contains('hidden') && !e.target.closest('#mobile-hud-controls')) {
+        popoverMobileHud.classList.add('hidden');
+        btnMobileHud.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 

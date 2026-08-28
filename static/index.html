@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function(){
+      var t = localStorage.getItem('edu_explore_theme')
+        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'midnight' : 'paper');
+      document.documentElement.className = 'theme-' + t;
+    })();
+  </script>
   
   <!-- Primary Meta Tags -->
   <title>Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer</title>
@@ -89,6 +96,12 @@
     </div>
 
     <div class="header-right">
+            <!-- Theme Switcher Button -->
+      <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light / Dark Mode" aria-label="Toggle Light and Dark Mode">
+        <span class="theme-icon icon-sun" aria-hidden="true">☀️</span>
+        <span class="theme-icon icon-moon" aria-hidden="true">🌙</span>
+      </button>
+
       <!-- View Surface Switcher: Plot <-> Index -->
       <div class="view-toggle" role="group" aria-label="Switch presentation view">
         <button id="view-plot-btn" class="toggle-btn active" title="Switch to Spatial Plot Canvas" aria-pressed="true">Plot</button>
@@ -149,6 +162,23 @@
           <!-- Layer 4: Interactive Overlays & Hover Labels -->
           <g id="layer-overlays" class="layer-overlays"></g>
         </svg>
+      </div>
+
+            <!-- Mobile Floating HUD Overlay (Collapsed on <=480px) -->
+      <div id="mobile-hud-controls" class="mobile-hud-container" role="region" aria-label="Mobile Map Controls">
+        <button id="btn-mobile-hud-toggle" class="ctrl-btn btn-hud-more" title="Map Legend & Block Info" aria-label="Open Legend and Map Details" aria-expanded="false">ℹ️</button>
+        <div id="mobile-hud-popover" class="mobile-hud-popover hidden" role="dialog" aria-modal="false" aria-label="Map Legend & Options">
+          <div class="popover-header">
+            <span>Map Legend & Layers</span>
+            <button id="btn-close-hud-popover" class="popover-close" aria-label="Close Popover">✕</button>
+          </div>
+          <div class="popover-legend-items">
+            <div class="legend-item"><span class="legend-mark mark-center" aria-hidden="true"></span> Central Hub (Kanyakumari)</div>
+            <div class="legend-item"><span class="legend-mark mark-school" aria-hidden="true"></span> School (1,213)</div>
+            <div class="legend-item"><span class="legend-mark mark-college" aria-hidden="true"></span> College (83)</div>
+            <div class="legend-item"><span class="legend-mark mark-verified" aria-hidden="true"></span> Verified Leadership</div>
+          </div>
+        </div>
       </div>
 
       <!-- Legend -->
