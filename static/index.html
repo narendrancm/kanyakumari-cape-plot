@@ -63,7 +63,7 @@
   <header id="app-header" role="banner">
     <div class="header-left">
       <a href="/" class="brand-link" aria-label="Edu-Explore Cape Home">
-        <img src="/static/icons/kanyakumari-cape-icon.png" alt="Kanyakumari District Map" class="brand-map-icon" width="28" height="28">
+        <div class="brand-icon-wrapper"><img src="/static/icons/kanyakumari-cape-icon.png" alt="Kanyakumari District Map" class="brand-map-icon" width="34" height="34"></div>
         <div class="brand-titles">
           <span class="brand-title" id="lbl-brand-title">Edu-Explore Cape</span>
           <span class="brand-subtitle" id="lbl-brand-subtitle">Kanyakumari Educational Directory</span>
@@ -115,8 +115,14 @@
     
     <!-- LEFT SIDEBAR: INDEX VIEW -->
     <section id="surface-index" class="surface-view surface-index-sidebar" aria-label="Institutions List Surface">
-      <div class="index-header-sticky">
-        <div class="kpi-badge-shelf" role="group" aria-label="Quick Category Filters">
+            <div class="index-header-sticky">
+        <!-- Active Block Filter Banner in Sidebar -->
+        <div id="sidebar-block-banner" class="sidebar-block-banner hidden" role="status">
+          <span>Region: <strong id="sidebar-block-title">Agastheeswaram</strong></span>
+          <button id="btn-clear-block-filter" class="btn-clear-banner" title="Show All Blocks">✕ Clear</button>
+        </div>
+
+        <div class="kpi-badge-shelf" role="group" aria-label="Quick Category Filters"> role="group" aria-label="Quick Category Filters">
           <button class="kpi-pill active" data-filter="all">All <span class="kpi-count">1,296</span></button>
           <button class="kpi-pill" data-filter="schools">Schools <span class="kpi-count">1,213</span></button>
           <button class="kpi-pill" data-filter="colleges">Colleges <span class="kpi-count">83</span></button>
@@ -142,6 +148,16 @@
         <button id="zoom-in" class="ctrl-btn" title="Zoom In" aria-label="Zoom In">+</button>
         <button id="zoom-out" class="ctrl-btn" title="Zoom Out" aria-label="Zoom Out">−</button>
         <button id="zoom-reset" class="ctrl-btn" title="Reset District View" aria-label="Reset District View">⤾</button>
+      </div>
+
+            <!-- On-Map Quick Filter Legend (Click to toggle Schools / Colleges / Layers) -->
+      <div class="map-legend-dock" role="toolbar" aria-label="Quick Map Filter Legend">
+        <button class="map-legend-chip active" data-type="all" title="Show all institutions">🗺️ All (1,296)</button>
+        <button class="map-legend-chip" data-type="school" title="Show schools only">● Schools (1,213)</button>
+        <button class="map-legend-chip" data-type="college" title="Show colleges only">■ Colleges (83)</button>
+        <button class="map-legend-chip" data-filter="govt" title="Show government institutions">🏛️ Govt</button>
+        <button class="map-legend-chip" data-filter="aided" title="Show private-aided institutions">🤝 Aided</button>
+        <button class="map-legend-chip" data-filter="verified" title="Show verified institutions">🛡️ Verified</button>
       </div>
 
       <!-- Active Block Breadcrumb -->

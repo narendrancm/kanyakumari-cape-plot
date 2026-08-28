@@ -536,8 +536,13 @@
   function resetDistrictView() {
     state.selectedBlock = null;
     el.activeBlockPill.classList.add('hidden');
+    const sidebarBanner = document.getElementById('sidebar-block-banner');
+    if (sidebarBanner) sidebarBanner.classList.add('hidden');
+
     document.querySelectorAll('.block-polygon').forEach(p => p.classList.remove('active'));
     setViewBox(0, 0, 1000, 1000, true);
+    renderPlotNodes();
+    renderIndexView();
     updateUrlParams();
   }
 
@@ -550,6 +555,14 @@
     el.activeBlockName.textContent = `${bName} (${b.total_count} institutions)`;
     el.activeBlockPill.classList.remove('hidden');
 
+    // Update Sidebar Region Banner
+    const sidebarBanner = document.getElementById('sidebar-block-banner');
+    const sidebarTitle = document.getElementById('sidebar-block-title');
+    if (sidebarBanner && sidebarTitle) {
+      sidebarTitle.textContent = `${bName} (${b.total_count} institutions)`;
+      sidebarBanner.classList.remove('hidden');
+    }
+
     document.querySelectorAll('.block-polygon').forEach(p => {
       p.classList.toggle('active', p.getAttribute('data-block') === blockName);
     });
@@ -561,6 +574,8 @@
     const y = Math.max(0, b.cy - span / 2);
 
     setViewBox(x, y, span, span, true);
+    renderPlotNodes();
+    renderIndexView();
     updateUrlParams();
   }
 
@@ -624,14 +639,25 @@
 
   function getFilteredInstitutions() {
     let list = state.institutions;
-    if (state.filterType !== 'all') list = list.filter(i => i.institution_type === state.filterType);
 
+    // Filter by Selected Region / Block (When clicked on map)
+    if (state.selectedBlock) {
+      list = list.filter(i => i.block === state.selectedBlock);
+    }
+
+    // Filter by Type (All / Schools / Colleges)
+    if (state.filterType !== 'all') {
+      list = list.filter(i => i.institution_type === state.filterType);
+    }
+
+    // Filter by KPI Pill
     if (state.kpiFilter === 'schools') list = list.filter(i => i.institution_type === 'school');
     else if (state.kpiFilter === 'colleges') list = list.filter(i => i.institution_type === 'college');
     else if (state.kpiFilter === 'govt') list = list.filter(i => i.management_type === 'Government');
     else if (state.kpiFilter === 'aided') list = list.filter(i => i.management_type === 'Private-Aided');
     else if (state.kpiFilter === 'verified') list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
 
+    // Filter by Search Query
     if (state.searchQuery.trim()) {
       const q = state.searchQuery.trim().toLowerCase();
       list = list.filter(i => 
@@ -1002,6 +1028,39 @@
         showToast('✓ Correction submitted for verification review!');
       }, 2000);
     });
+  }
+
+  
+  // Sync On-Map Legend Chips & Header Pills
+  document.querySelectorAll('.map-legend-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.map-legend-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const chipType = chip.getAttribute('data-type');
+      const chipFilter = chip.getAttribute('data-filter');
+
+      if (chipType) {
+        state.filterType = chipType;
+        state.kpiFilter = 'all';
+        el.pillBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === chipType));
+      } else if (chipFilter) {
+        state.kpiFilter = chipFilter;
+        if (chipFilter === 'schools') state.filterType = 'school';
+        else if (chipFilter === 'colleges') state.filterType = 'college';
+        else state.filterType = 'all';
+        el.kpiPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-filter') === chipFilter));
+      }
+
+      renderPlotNodes();
+      renderIndexView();
+      updateUrlParams();
+    });
+  });
+
+  const btnClearBlockFilter = document.getElementById('btn-clear-block-filter');
+  if (btnClearBlockFilter) {
+    btnClearBlockFilter.addEventListener('click', resetDistrictView);
   }
 
   readUrlParams();

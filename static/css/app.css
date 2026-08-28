@@ -842,3 +842,107 @@ body {
   .header-center .type-filter-pills { display: none; }
   .brand-subtitle { display: none; }
 }
+
+/* Brand Icon Badge */
+.brand-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--color-sea-soft);
+  border: 1.5px solid rgba(31, 92, 87, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(31, 92, 87, 0.08);
+  transition: transform 150ms ease, border-color 150ms ease;
+}
+.brand-link:hover .brand-icon-wrapper {
+  transform: scale(1.05);
+  border-color: var(--color-sea);
+}
+.brand-map-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Sidebar Active Block Filter Banner */
+.sidebar-block-banner {
+  background: var(--color-sea-soft);
+  border: 1px solid var(--color-sea);
+  color: var(--color-sea);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.btn-clear-banner {
+  background: #FFFFFF;
+  border: 1px solid var(--color-sea);
+  color: var(--color-sea);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-clear-banner:hover {
+  background: var(--color-sea);
+  color: #FFFFFF;
+}
+
+/* On-Map Floating Filter Legend Dock */
+.map-legend-dock {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 4px 6px;
+  display: flex;
+  gap: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  max-width: calc(100% - 32px);
+  overflow-x: auto;
+}
+.map-legend-chip {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 140ms ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.map-legend-chip:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-sea);
+  color: var(--color-sea);
+}
+.map-legend-chip.active {
+  background: var(--color-sea);
+  border-color: var(--color-sea);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 600px) {
+  .map-legend-dock {
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+  }
+}
