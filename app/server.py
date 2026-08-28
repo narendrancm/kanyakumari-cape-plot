@@ -12,7 +12,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 app = FastAPI(
-    title="Edu-Explore API - Kanyakumari Educational Directory & Spatial Explorer",
+    title="Edu-Explore Cape API - Kanyakumari Educational Directory & Spatial Explorer",
     version="2.0.0",
     docs_url="/api/docs",
     redoc_url=None
@@ -66,7 +66,7 @@ def health_check():
     db_exists = os.path.exists(DB_PATH)
     return {
         "status": "ok",
-        "app": "Edu-Explore",
+        "app": "Edu-Explore Cape",
         "district": "Kanyakumari",
         "institutions_total": 1296,
         "database_connected": db_exists,
@@ -298,7 +298,7 @@ if os.path.exists(STATIC_DIR):
         index_file = os.path.join(STATIC_DIR, "index.html")
         if os.path.exists(index_file):
             return FileResponse(index_file)
-        return {"message": "Edu-Explore interface loading"}
+        return {"message": "Edu-Explore Cape interface loading"}
 
 # Custom Branded HTML Exception Handlers
 @app.exception_handler(404)
@@ -308,7 +308,7 @@ async def custom_404_handler(request: Request, exc: HTTPException):
     html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><title>404 — Page Not Found | Edu-Explore</title>
+  <meta charset="UTF-8"><title>404 — Page Not Found | Edu-Explore Cape</title>
   <link rel="stylesheet" href="/static/css/app.css">
   <style>
     body { display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; }
@@ -323,7 +323,7 @@ async def custom_404_handler(request: Request, exc: HTTPException):
     <h1>404</h1>
     <h2>Entity or Page Not Found</h2>
     <p>The requested educational record, block surface, or URL could not be located in the Kanyakumari district registry.</p>
-    <a href="/" class="btn">← Return to Edu-Explore Explorer</a>
+    <a href="/" class="btn">← Return to Edu-Explore Cape Explorer</a>
   </div>
 </body>
 </html>"""
@@ -336,7 +336,7 @@ async def custom_500_handler(request: Request, exc: Exception):
     html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><title>500 — Server Error | Edu-Explore</title>
+  <meta charset="UTF-8"><title>500 — Server Error | Edu-Explore Cape</title>
   <link rel="stylesheet" href="/static/css/app.css">
   <style>
     body { display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; }
@@ -351,7 +351,7 @@ async def custom_500_handler(request: Request, exc: Exception):
     <h1>500</h1>
     <h2>Server Error</h2>
     <p>An unexpected error occurred while querying the educational spatial registry. Please try again shortly.</p>
-    <a href="/" class="btn">← Return to Edu-Explore</a>
+    <a href="/" class="btn">← Return to Edu-Explore Cape</a>
   </div>
 </body>
 </html>"""

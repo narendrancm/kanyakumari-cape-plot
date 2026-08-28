@@ -1,4 +1,4 @@
-// Edu-Explore — Kanyakumari Educational Directory & Spatial Explorer Client Engine
+// Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer Client Engine
 // Measured Trousdale Interaction Model — Unconstrained 1:1 Direct-Track Block Dragging & Production Hardening
 
 (function () {
