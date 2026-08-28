@@ -805,45 +805,6 @@ body {
 }
 .corr-success-msg { color: #2E7D32; font-weight: 600; margin-top: 8px; }
 
-/* ==========================================================================
-   MOBILE & TABLET RESPONSIVE (< 900px)
-   ========================================================================== */
-@media (max-width: 899px) {
-  .view-toggle { display: flex; }
-  .split-viewport {
-    display: block;
-    height: calc(100vh - var(--header-height) - var(--footer-height));
-  }
-  .surface-index-sidebar {
-    display: none;
-    width: 100%;
-  }
-  .surface-index-sidebar.active {
-    display: flex;
-  }
-  .surface-map-canvas {
-    display: none;
-  }
-  .surface-map-canvas.active {
-    display: block;
-  }
-  .detail-dock {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    max-height: 75vh;
-    border-radius: 12px 12px 0 0;
-  }
-}
-
-@media (max-width: 600px) {
-  .header-center .type-filter-pills { display: none; }
-  .brand-subtitle { display: none; }
-}
-
-/* Brand Icon Badge */
 .brand-icon-wrapper {
   width: 36px;
   height: 36px;
@@ -1182,10 +1143,7 @@ button {
   color: #FFFFFF;
 }
 
-/* Split Viewport Layout */
-.split-viewport {
-  height: calc(100vh - var(--header-height) - var(--footer-height));
-}
+
 
 /* Responsive Rules */
 @media (max-width: 1099px) {
@@ -1226,5 +1184,58 @@ button {
   }
   .header-filter-shelf {
     padding: 2px 0;
+  }
+}
+
+/* Split Viewport Layout */
+.split-viewport {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.surface-index-sidebar {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.index-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 8px 12px 24px 12px;
+}
+
+@media (max-width: 899px) {
+  .view-toggle {
+    display: flex;
+  }
+  .split-viewport {
+    display: block;
+    height: calc(100vh - var(--header-height) - var(--footer-height));
+  }
+  .surface-index-sidebar {
+    display: none;
+    width: 100%;
+  }
+  .surface-index-sidebar.active {
+    display: flex;
+  }
+  .surface-map-canvas {
+    display: none;
+    width: 100%;
+  }
+  .surface-map-canvas.active {
+    display: block;
   }
 }

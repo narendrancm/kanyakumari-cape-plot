@@ -38,9 +38,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Versioned Stylesheet -->
-  <link rel="stylesheet" href="/static/css/app.css?v=3.3.0">
+  <link rel="stylesheet" href="/static/css/app.css?v=3.4.0">
 
-  <!-- Critical Inline Reset for Filter Shelf & Header (Guaranteed 0ms Rendering with ZERO Native Browser Button Artifacts) -->
+  <!-- Critical Inline Reset for Filter Shelf, Header & Split Viewport Layout -->
   <style>
     /* Explicit Native Button Style Reset */
     button, input, select, textarea {
@@ -93,6 +93,64 @@
       overflow: hidden !important;
       flex-shrink: 0 !important;
       gap: 2px !important;
+    }
+
+    /* Core Desktop Split Viewport Structure (>= 900px) */
+    @media (min-width: 900px) {
+      .split-viewport {
+        display: grid !important;
+        grid-template-columns: 420px 1fr !important;
+        height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
+        width: 100% !important;
+        overflow: hidden !important;
+      }
+      .surface-index-sidebar {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        background: #FFFFFF !important;
+        border-right: 1px solid rgba(26, 25, 22, 0.12) !important;
+      }
+      .index-content-scroll {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+        display: block !important;
+      }
+      .surface-map-canvas {
+        display: block !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        position: relative !important;
+      }
+    }
+
+    /* Tablet / Mobile Toggle (< 900px) */
+    @media (max-width: 899px) {
+      .split-viewport {
+        display: block !important;
+        height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
+        width: 100% !important;
+      }
+      .surface-index-sidebar {
+        display: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        flex-direction: column !important;
+      }
+      .surface-index-sidebar.active {
+        display: flex !important;
+      }
+      .surface-map-canvas {
+        display: none !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .surface-map-canvas.active {
+        display: block !important;
+      }
     }
   </style>
   
@@ -344,6 +402,6 @@
       });
     }
   </script>
-  <script src="/static/js/app.js?v=3.3.0"></script>
+  <script src="/static/js/app.js?v=3.4.0"></script>
 </body>
 </html>
