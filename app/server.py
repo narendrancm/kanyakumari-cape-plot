@@ -3,6 +3,7 @@ import sqlite3
 import csv
 import io
 import re
+import json
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, FileResponse
@@ -83,30 +84,27 @@ Sitemap: https://capeedudetails.me/sitemap.xml
 
 @app.get("/sitemap.xml", response_class=Response)
 def sitemap_xml():
-    blocks = [
-        "Agasteeswaram", "Thovalai", "Rajakkamangalam", "Kurunthancode",
-        "Thuckalay", "Thiruvattar", "Killiyoor", "Munchirai", "Melpuram"
-    ]
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, block FROM institutions_master ORDER BY id ASC")
+    institutions = [dict(r) for r in cursor.fetchall()]
+    cursor.execute("SELECT name FROM block_polygons ORDER BY name ASC")
+    blocks = [r[0] for r in cursor.fetchall()]
+    conn.close()
+    
     xml_lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        '  <url>',
-        '    <loc>https://capeedudetails.me/</loc>',
-        '    <changefreq>weekly</changefreq>',
-        '    <priority>1.0</priority>',
-        '  </url>',
-        '  <url>',
-        '    <loc>https://capeedudetails.me/?view=index</loc>',
-        '    <changefreq>weekly</changefreq>',
-        '    <priority>0.9</priority>',
-        '  </url>'
+        '  <url><loc>https://capeedudetails.me/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>',
+        '  <url><loc>https://capeedudetails.me/?view=index</loc><changefreq>daily</changefreq><priority>0.9</priority></url>'
     ]
     for b in blocks:
-        xml_lines.append('  <url>')
-        xml_lines.append(f'    <loc>https://capeedudetails.me/?block={b}</loc>')
-        xml_lines.append('    <changefreq>monthly</changefreq>')
-        xml_lines.append('    <priority>0.8</priority>')
-        xml_lines.append('  </url>')
+        xml_lines.append(f'  <url><loc>https://capeedudetails.me/?block={b}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+    
+    for inst in institutions:
+        slug = slugify(inst["name"])
+        xml_lines.append(f'  <url><loc>https://capeedudetails.me/institution/{inst["id"]}/{slug}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>')
+        
     xml_lines.append('</urlset>')
     return Response(content="\n".join(xml_lines), media_type="application/xml")
 
@@ -115,9 +113,14 @@ def get_blocks():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT name, cx, cy, r, taluk, hq, description, school_count, college_count, total_count
-        FROM blocks
-        ORDER BY name ASC
+        SELECT 
+            bp.name, bp.name_ta, bp.svg_path, bp.svg_cx AS cx, bp.svg_cy AS cy,
+            bp.bbox_min_x, bp.bbox_min_y, bp.bbox_max_x, bp.bbox_max_y,
+            bp.centroid_lat, bp.centroid_lon, bp.school_count, bp.college_count, bp.total_count,
+            b.taluk, b.hq, b.description
+        FROM block_polygons bp
+        LEFT JOIN blocks b ON bp.name = b.name
+        ORDER BY bp.name ASC
     """)
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
@@ -301,6 +304,148 @@ if os.path.exists(STATIC_DIR):
         return {"message": "Edu-Explore Cape interface loading"}
 
 # Custom Branded HTML Exception Handlers
+
+# Service Worker Route
+@app.get("/sw.js", response_class=FileResponse)
+def serve_service_worker():
+    sw_file = os.path.join(STATIC_DIR, "sw.js")
+    if os.path.exists(sw_file):
+        return FileResponse(sw_file, media_type="application/javascript", headers={"Service-Worker-Allowed": "/"})
+    raise HTTPException(status_code=404, detail="Service worker not found")
+
+def slugify(text: str) -> str:
+    text = (text or '').lower()
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    return text.strip('-') or 'details'
+
+@app.get("/institution/{inst_id}/{slug}", response_class=HTMLResponse)
+@app.get("/institution/{inst_id}", response_class=HTMLResponse)
+def serve_institution_seo_page(inst_id: str, slug: Optional[str] = None):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM institutions_master WHERE id = ?", (inst_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Institution not found")
+        
+    inst = dict(row)
+    name = inst.get("name", "Institution")
+    block = inst.get("block", "Kanyakumari")
+    category = inst.get("category", "Educational Institution")
+    mgmt = inst.get("management_type", "General")
+    inst_type = inst.get("institution_type", "school")
+    loc = inst.get("location") or block
+    phone = inst.get("phone") or "Not Available"
+    email = inst.get("email") or "Not Available"
+    website = inst.get("website") or f"https://capeedudetails.me/?id={inst_id}"
+    schema_type = "CollegeOrUniversity" if inst_type == "college" else "School"
+    
+    title = f"{name}, {block}, Kanyakumari — Contact & Details | Edu-Explore Cape"
+    desc = f"Verified contact, principal, address, and academic information for {name} ({category} · {mgmt}) in {block}, Kanyakumari District."
+    page_url = f"https://capeedudetails.me/institution/{inst_id}/{slugify(name)}"
+    
+    schema_json = json.dumps({
+        "@context": "https://schema.org",
+        "@type": schema_type,
+        "name": name,
+        "description": desc,
+        "url": page_url,
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": loc,
+            "addressRegion": "Tamil Nadu",
+            "addressCountry": "IN"
+        },
+        "telephone": phone if phone != "NA" else None,
+        "email": email if email != "NA" else None
+    }, ensure_ascii=False, indent=2)
+    
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content="{desc}">
+  <link rel="canonical" href="{page_url}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{page_url}">
+  <meta property="og:title" content="{title}">
+  <meta property="og:description" content="{desc}">
+  <meta property="og:image" content="https://capeedudetails.me/static/icons/kanyakumari-cape-icon.png">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{page_url}">
+  <meta name="twitter:title" content="{title}">
+  <meta name="twitter:description" content="{desc}">
+  <meta name="twitter:image" content="https://capeedudetails.me/static/icons/kanyakumari-cape-icon.png">
+  
+  <script type="application/ld+json">
+{schema_json}
+  </script>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <style>
+    .seo-page {{ max-width: 760px; margin: 40px auto; padding: 24px; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }}
+    .seo-header {{ border-bottom: 2px solid var(--color-sea); padding-bottom: 16px; margin-bottom: 20px; }}
+    .seo-header h1 {{ font-size: 24px; color: var(--color-ink); margin: 0 0 8px 0; }}
+    .seo-tag {{ display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: var(--color-sea-soft); color: var(--color-sea); }}
+    .fact-grid {{ display: grid; grid-template-columns: 140px 1fr; gap: 12px 16px; font-size: 13px; margin: 20px 0; }}
+    .fact-lbl {{ font-weight: 600; color: var(--color-ink-muted); }}
+    .fact-val {{ color: var(--color-ink); }}
+    .btn-explore {{ display: inline-flex; align-items: center; gap: 6px; background: var(--color-sea); color: #FFF; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 13px; }}
+  </style>
+</head>
+<body class="theme-paper">
+  <div class="seo-page">
+    <div class="seo-header">
+      <span class="seo-tag">{inst_type.upper()} · {inst.get("verification_status", "Record")}</span>
+      <h1>{name}</h1>
+      <p style="color:var(--color-ink-muted);font-size:13px;margin:4px 0 0 0;">{category} · {mgmt} · {block} Block, Kanyakumari District</p>
+    </div>
+    
+    <div class="fact-grid">
+      <div class="fact-lbl">Block & Taluk</div>
+      <div class="fact-val">{block} ({inst.get("taluk", "NA")})</div>
+      
+      <div class="fact-lbl">Identifier / UDISE</div>
+      <div class="fact-val font-mono">{inst.get("udise_code") or inst.get("identifier") or inst_id}</div>
+      
+      <div class="fact-lbl">Location</div>
+      <div class="fact-val">{loc}</div>
+      
+      <div class="fact-lbl">Leadership</div>
+      <div class="fact-val font-medium">{inst.get("principal_name") or "NA"}</div>
+      
+      <div class="fact-lbl">Phone</div>
+      <div class="fact-val">{phone}</div>
+      
+      <div class="fact-lbl">Email</div>
+      <div class="fact-val">{email}</div>
+      
+      <div class="fact-lbl">Website</div>
+      <div class="fact-val">{inst.get("website") or "NA"}</div>
+      
+      <div class="fact-lbl">Medium</div>
+      <div class="fact-val">{inst.get("medium") or "English / Tamil"}</div>
+      
+      <div class="fact-lbl">Data Provenance</div>
+      <div class="fact-val">{inst.get("verification_status") or "Verified"} — {inst.get("sources_notes") or "Official District Education Registry"}</div>
+    </div>
+    
+    <div style="margin-top: 28px; display: flex; gap: 12px; align-items: center;">
+      <a href="/?id={inst_id}" class="btn-explore">🗺️ View on Edu-Explore Cape Spatial Map</a>
+      <a href="/" style="font-size:13px;color:var(--color-sea);text-decoration:none;font-weight:600;">← Back to Directory</a>
+    </div>
+  </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
+
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: HTTPException):
     if request.url.path.startswith("/api/"):

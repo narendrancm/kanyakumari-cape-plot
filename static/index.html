@@ -2,103 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   
   <!-- Primary Meta Tags -->
-  <title>Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer</title>
-  <meta name="title" content="Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer">
-  <meta name="description" content="Explore 1,296 verified schools and colleges across all 9 canonical blocks in Kanyakumari District. Interactive spatial constellation map, leadership contacts, verified phone numbers, and official websites.">
-  <meta name="keywords" content="Edu-Explore Cape, Kanyakumari schools, Kanyakumari colleges, Nagercoil schools, Cape Comorin education, UDISE Kanyakumari, CBSE SARAS Kanyakumari, Tamil Nadu school directory">
-  <meta name="author" content="Edu-Explore Cape Team">
+  <title>Edu-Explore Cape — Verified Educational Directory & Spatial Map of Kanyakumari</title>
+  <meta name="title" content="Edu-Explore Cape — Verified Educational Directory & Spatial Map of Kanyakumari">
+  <meta name="description" content="Spatial directory and verified database of 1,296 educational institutions (1,213 schools, 83 colleges) across 9 educational blocks in Kanyakumari District.">
+  <meta name="keywords" content="Kanyakumari schools, Kanyakumari colleges, Agastheeswaram, Thovalai, Thuckalay, Nagercoil school directory, UDISE Tamil Nadu, Edu-Explore Cape">
+  <meta name="author" content="Edu-Explore Cape Open Data Project">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#1F5C57">
   <link rel="canonical" href="https://capeedudetails.me/">
-
-  <!-- Favicons & Icons -->
-  <link rel="icon" type="image/png" href="/static/icons/favicon-64.png">
-  <link rel="icon" type="image/svg+xml" href="/static/icons/kanyakumari_map.svg">
-  <link rel="apple-touch-icon" href="/static/icons/favicon-256.png">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://capeedudetails.me/">
-  <meta property="og:title" content="Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer">
-  <meta property="og:description" content="Interactive 2D spatial explorer and audited ground-truth registry of 1,296 schools and colleges across Kanyakumari District.">
-  <meta property="og:image" content="https://capeedudetails.me/static/icons/kanyakumari_map.png">
-  <meta property="og:site_name" content="Edu-Explore Cape">
+  <meta property="og:title" content="Edu-Explore Cape — Educational Directory & Spatial Map">
+  <meta property="og:description" content="Verified spatial directory of 1,296 schools and colleges across Kanyakumari District. Search, filter, and explore contact lines.">
+  <meta property="og:image" content="https://capeedudetails.me/static/icons/kanyakumari-cape-icon.png">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://capeedudetails.me/">
-  <meta property="twitter:title" content="Edu-Explore Cape — Kanyakumari Educational Directory">
-  <meta property="twitter:description" content="Explore 1,296 verified educational institutions across all 9 blocks of Kanyakumari.">
-  <meta property="twitter:image" content="https://capeedudetails.me/static/icons/kanyakumari_map.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://capeedudetails.me/">
+  <meta name="twitter:title" content="Edu-Explore Cape — Educational Directory & Spatial Map">
+  <meta name="twitter:description" content="Verified spatial directory of 1,296 schools and colleges across Kanyakumari District.">
+  <meta name="twitter:image" content="https://capeedudetails.me/static/icons/kanyakumari-cape-icon.png">
 
-  <!-- JSON-LD Structured Data -->
+  <!-- Favicon & Touch Icons -->
+  <link rel="icon" type="image/png" href="/static/icons/kanyakumari-cape-icon.png">
+  <link rel="apple-touch-icon" href="/static/icons/kanyakumari-cape-icon.png">
+  <meta name="theme-color" content="#1F5C57">
+
+  <!-- Preconnect & Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/app.css">
+  
+  <!-- Structured Data / JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@type": "EducationalOrganization",
     "name": "Edu-Explore Cape",
-    "url": "https://capeedudetails.me/",
-    "description": "Interactive spatial directory and ground-truth verified registry of 1,296 educational institutions across 9 canonical blocks in Kanyakumari District, Tamil Nadu.",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://capeedudetails.me/?q={search_term_string}",
-      "query-input": "required name=search_term_string"
+    "url": "https://capeedudetails.me",
+    "logo": "https://capeedudetails.me/static/icons/kanyakumari-cape-icon.png",
+    "description": "Verified spatial directory and database of 1,296 schools and colleges across 9 educational blocks in Kanyakumari District, Tamil Nadu.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "Tamil Nadu",
+      "addressCountry": "IN"
     }
   }
   </script>
-
-  <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="theme-paper">
+  <div id="toast-notification" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <!-- Header Navigation Bar -->
-  <header class="cape-header" role="banner">
+  <!-- Header -->
+  <header id="app-header" role="banner">
     <div class="header-left">
-      <!-- Kanyakumari District Map Brand Icon & Title -->
-      <button class="brand-btn" id="btn-reset-view" aria-label="Edu-Explore Cape Home — Reset View to Full District">
-        <img src="/static/icons/kanyakumari_map.png" alt="Kanyakumari District Map" class="brand-map-icon" width="34" height="32">
-        <span class="brand-title">Edu-Explore Cape</span>
-      </button>
-      <span class="brand-sub">Kanyakumari · 9 Blocks · 1,296 Institutions</span>
+      <a href="/" class="brand-link" aria-label="Edu-Explore Cape Home">
+        <img src="/static/icons/kanyakumari-cape-icon.png" alt="Kanyakumari District Map" class="brand-map-icon" width="28" height="28">
+        <div class="brand-titles">
+          <span class="brand-title" id="lbl-brand-title">Edu-Explore Cape</span>
+          <span class="brand-subtitle" id="lbl-brand-subtitle">Kanyakumari Educational Directory</span>
+        </div>
+      </a>
     </div>
 
-    <div class="header-center" role="search">
-      <!-- Search Input with Debouncing & FTS5 -->
-      <div class="search-box">
-        <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="search-input" placeholder="Search schools, colleges, blocks, principals..." autocomplete="off" spellcheck="false" aria-label="Search schools, colleges, blocks, or principals">
-        <button id="search-clear" class="btn-clear hidden" title="Clear Search" aria-label="Clear Search Input">×</button>
+    <div class="header-center">
+      <!-- Search -->
+      <div class="search-box" role="search">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input type="text" id="search-input" placeholder="Search 1,296 schools, colleges, leadership, locations..." aria-label="Search institutions">
+        <button id="search-clear" class="search-clear-btn hidden" title="Clear Search" aria-label="Clear Search">✕</button>
       </div>
 
       <!-- Type Filter Pills -->
-      <div class="filter-pills" role="group" aria-label="Filter institutions by type">
-        <button class="pill-btn active" data-type="all" aria-pressed="true">All (1,296)</button>
-        <button class="pill-btn" data-type="school" aria-pressed="false">Schools (1,213)</button>
-        <button class="pill-btn" data-type="college" aria-pressed="false">Colleges (83)</button>
+      <div class="type-filter-pills" role="radiogroup" aria-label="Filter institution type">
+        <button class="pill-btn active" data-type="all" role="radio" aria-checked="true" id="pill-all">All (1,296)</button>
+        <button class="pill-btn" data-type="school" role="radio" aria-checked="false" id="pill-schools">Schools (1,213)</button>
+        <button class="pill-btn" data-type="college" role="radio" aria-checked="false" id="pill-colleges">Colleges (83)</button>
       </div>
     </div>
 
     <div class="header-right">
-            
+      <!-- Tamil Language Toggle -->
+      <button id="btn-lang-toggle" class="btn-subtle lang-btn" title="Toggle Tamil / English" aria-label="Switch Language">
+        <span class="lang-en font-bold">EN</span><span class="lang-divider">/</span><span class="lang-ta">தமிழ்</span>
+      </button>
 
-      <!-- View Surface Switcher: Plot <-> Index -->
-      <div class="view-toggle" role="group" aria-label="Switch presentation view">
-        <button id="view-plot-btn" class="toggle-btn active" title="Switch to Spatial Plot Canvas" aria-pressed="true">Plot</button>
-        <button id="view-index-btn" class="toggle-btn" title="Switch to Typographic Index" aria-pressed="false">Index</button>
+      <!-- View Toggle (Mobile/Tablet switch) -->
+      <div class="view-toggle" role="group" aria-label="Switch view">
+        <button id="view-plot-btn" class="toggle-btn active" title="Switch to Map" aria-pressed="true">Map</button>
+        <button id="view-index-btn" class="toggle-btn" title="Switch to List" aria-pressed="false">List</button>
       </div>
 
-      <!-- CSV Export Menu -->
+      <!-- Export Menu -->
       <div class="export-dropdown">
         <button id="export-btn" class="btn-subtle" title="Export Dataset" aria-haspopup="true" aria-expanded="false">Export ▾</button>
         <div id="export-menu" class="dropdown-menu hidden" role="menu">
@@ -109,29 +110,49 @@
     </div>
   </header>
 
-  <!-- Main Viewport Area -->
-  <main id="app-viewport" role="main">
+  <!-- Main Viewport Area (Desktop Split Container) -->
+  <main id="app-viewport" class="split-viewport" role="main">
     
-    <!-- SURFACE 1: PLOT (2D Spatial Vector Canvas) -->
-    <section id="surface-plot" class="surface-view active" aria-label="Spatial Constellation Map Surface">
-      <div class="plot-controls" role="toolbar" aria-label="Canvas Zoom & Pan Controls">
+    <!-- LEFT SIDEBAR: INDEX VIEW -->
+    <section id="surface-index" class="surface-view surface-index-sidebar" aria-label="Institutions List Surface">
+      <div class="index-header-sticky">
+        <div class="kpi-badge-shelf" role="group" aria-label="Quick Category Filters">
+          <button class="kpi-pill active" data-filter="all">All <span class="kpi-count">1,296</span></button>
+          <button class="kpi-pill" data-filter="schools">Schools <span class="kpi-count">1,213</span></button>
+          <button class="kpi-pill" data-filter="colleges">Colleges <span class="kpi-count">83</span></button>
+          <button class="kpi-pill" data-filter="govt">Govt <span class="kpi-count">482</span></button>
+          <button class="kpi-pill" data-filter="aided">Aided <span class="kpi-count">418</span></button>
+          <button class="kpi-pill" data-filter="verified">🛡️ Verified <span class="kpi-count">797</span></button>
+        </div>
+      </div>
+
+      <div id="index-content" class="index-content-scroll" role="feed" aria-busy="false"></div>
+
+      <div id="index-empty-state" class="index-empty hidden" role="status">
+        <div class="empty-icon">🔍</div>
+        <h3>No Institutions Found</h3>
+        <p id="empty-state-msg">No matching schools or colleges under current filters.</p>
+        <button id="btn-reset-filters" class="btn-reset-filters">Reset All Filters</button>
+      </div>
+    </section>
+
+    <!-- RIGHT CANVAS: REAL GEOGRAPHIC MAP SURFACE -->
+    <section id="surface-plot" class="surface-view surface-map-canvas active" aria-label="Spatial Geographic Map Surface">
+      <div class="plot-controls" role="toolbar" aria-label="Map Zoom & Reset Controls">
         <button id="zoom-in" class="ctrl-btn" title="Zoom In" aria-label="Zoom In">+</button>
         <button id="zoom-out" class="ctrl-btn" title="Zoom Out" aria-label="Zoom Out">−</button>
-        <button id="zoom-reset" class="ctrl-btn" title="Reset Zoom" aria-label="Reset District Zoom">⤾</button>
-        
+        <button id="zoom-reset" class="ctrl-btn" title="Reset District View" aria-label="Reset District View">⤾</button>
       </div>
 
       <!-- Active Block Breadcrumb -->
       <div id="active-block-pill" class="active-block-pill hidden" role="status" aria-live="polite">
-        <span id="active-block-name">Agasteeswaram</span>
-        <button id="btn-exit-block" title="Back to All Blocks" aria-label="Back to All Blocks">✕</button>
+        <span id="active-block-name">Agastheeswaram</span>
+        <button id="btn-exit-block" title="Back to Full District" aria-label="Back to Full District">✕</button>
       </div>
 
-      
-
-      <!-- SVG Canvas -->
-      <div id="svg-container" class="svg-container" tabindex="0" role="region" aria-label="Interactive Map of Kanyakumari Educational Blocks. Use mouse or touch to pan and zoom.">
-        <svg id="plot-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Constellation network representing 1,296 educational institutions across 9 blocks in Kanyakumari">
+      <!-- Interactive Vector SVG Canvas -->
+      <div id="svg-container" class="svg-container" tabindex="0" role="region" aria-label="Interactive Map of Kanyakumari Educational Blocks">
+        <svg id="plot-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Real vector boundary map of Kanyakumari District with 1,296 educational institutions">
           <defs>
             <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(26, 25, 22, 0.03)" stroke-width="1" />
@@ -139,255 +160,127 @@
           </defs>
           <rect width="100%" height="100%" fill="url(#grid-pattern)" />
           
-          <!-- Layer 1: Radial Guidelines from Center -->
-          <g id="layer-lines" class="layer-lines"></g>
+          <!-- Layer 1: Real Block Boundary Polygons -->
+          <g id="layer-polygons" class="layer-polygons"></g>
 
-          <!-- Layer 2: 9 Block Boundary Rings -->
-          <g id="layer-blocks" class="layer-blocks"></g>
+          <!-- Layer 2: Block Centroid Labels -->
+          <g id="layer-block-labels" class="layer-block-labels"></g>
 
           <!-- Layer 3: Institution Nodes (Schools & Colleges) -->
           <g id="layer-nodes" class="layer-nodes"></g>
 
-          <!-- Layer 4: Interactive Overlays & Hover Labels -->
+          <!-- Layer 4: Interactive Overlays & Single-Card Hover Labels -->
           <g id="layer-overlays" class="layer-overlays"></g>
         </svg>
       </div>
-
-            <!-- Mobile Floating HUD Overlay (Collapsed on <=480px) -->
-      <div id="mobile-hud-controls" class="mobile-hud-container" role="region" aria-label="Mobile Map Controls">
-        <button id="btn-mobile-hud-toggle" class="ctrl-btn btn-hud-more" title="Map Legend & Block Info" aria-label="Open Legend and Map Details" aria-expanded="false">ℹ️</button>
-        <div id="mobile-hud-popover" class="mobile-hud-popover hidden" role="dialog" aria-modal="false" aria-label="Map Legend & Options">
-          <div class="popover-header">
-            <span>Map Legend & Layers</span>
-            <button id="btn-close-hud-popover" class="popover-close" aria-label="Close Popover">✕</button>
-          </div>
-          <div class="popover-legend-items">
-            <div class="legend-item"><span class="legend-mark mark-center" aria-hidden="true"></span> Central Hub (Kanyakumari)</div>
-            <div class="legend-item"><span class="legend-mark mark-school" aria-hidden="true"></span> School (1,213)</div>
-            <div class="legend-item"><span class="legend-mark mark-college" aria-hidden="true"></span> College (83)</div>
-            <div class="legend-item"><span class="legend-mark mark-verified" aria-hidden="true"></span> Verified Leadership</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Legend -->
-      <div class="plot-legend" aria-label="Map Legend">
-        <div class="legend-item"><span class="legend-mark mark-center" aria-hidden="true"></span> Central Hub (Kanyakumari)</div>
-        <div class="legend-item"><span class="legend-mark mark-school" aria-hidden="true"></span> School (1,213)</div>
-        <div class="legend-item"><span class="legend-mark mark-college" aria-hidden="true"></span> College (83)</div>
-        <div class="legend-item"><span class="legend-mark mark-verified" aria-hidden="true"></span> Verified Leadership</div>
-      </div>
     </section>
 
-    <!-- SURFACE 2: INDEX (Typographic Hierarchy Grouped by Block) -->
-    <section id="surface-index" class="surface-view hidden" aria-label="Typographic Directory List Surface">
-      <div class="index-container">
-        <div class="index-header-summary">
-          <h2 class="index-title">Kanyakumari Educational Directory</h2>
-          <p class="index-meta">9 Canonical Blocks · 1,296 Audited Institutions</p>
-        </div>
-
-        <div id="index-content" class="index-blocks-list" role="feed" aria-busy="false">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Empty State Container -->
-        <div id="index-empty-state" class="empty-state-box hidden" role="status" aria-live="polite">
-          <div class="empty-icon">🔍</div>
-          <h3>No Institutions Found</h3>
-          <p id="empty-state-msg">No schools or colleges matched your current search and filter criteria.</p>
-          <button id="btn-reset-filters" class="btn-primary-sm">Reset All Filters</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- CALM DETAIL DOCK (Shared between Plot and Index) -->
-    <aside id="detail-dock" class="detail-dock hidden" role="region" aria-label="Institution Details Panel" aria-live="polite">
+    <!-- SLIDE-IN DETAIL DOCK -->
+    <aside id="detail-dock" class="detail-dock hidden" role="dialog" aria-modal="false" aria-label="Institution Details">
       <div class="dock-header">
-        <button id="dock-close" class="dock-close-btn" title="Close Panel (Esc)" aria-label="Close Details Panel">✕</button>
-        <span id="dock-type-badge" class="badge-type">School</span>
+        <div class="dock-badge-row">
+          <span id="dock-type-badge" class="type-badge">SCHOOL</span>
+          <span id="dock-status-badge" class="status-badge">Verified</span>
+        </div>
+        <button id="dock-close" class="dock-close-btn" title="Close Panel" aria-label="Close Panel">✕</button>
       </div>
 
-      <div class="dock-body">
+      <div class="dock-scroll-body">
         <h2 id="dock-title" class="dock-title">Institution Name</h2>
-        <div id="dock-category-line" class="dock-meta-line">Higher Secondary · Government</div>
+        <div id="dock-category-line" class="dock-subhead">Category · Management</div>
 
-        <div class="dock-section">
-          <div class="dock-fact-grid">
-            <div class="fact-item">
-              <span class="fact-label">UDISE / ID</span>
-              <span id="dock-id" class="fact-val font-mono">33300201004</span>
-            </div>
-            <div class="fact-item">
-              <span class="fact-label">Block (Taluk)</span>
-              <span id="dock-block" class="fact-val">Agasteeswaram (Agasteeswaram)</span>
-            </div>
-            <div class="fact-item">
-              <span class="fact-label">Management Type</span>
-              <span id="dock-mgmt" class="fact-val">Government</span>
-            </div>
-            <div class="fact-item">
-              <span class="fact-label">Instruction Medium</span>
-              <span id="dock-medium" class="fact-val">Tamil</span>
-            </div>
-            <div class="fact-item full-width">
-              <span class="fact-label">Location / Address</span>
-              <span id="dock-location" class="fact-val">Agasteeswaram, PIN: 629701</span>
-            </div>
-          </div>
+        <!-- Quick Action Buttons -->
+        <div class="dock-action-bar" role="group" aria-label="Direct Actions">
+          <a id="btn-act-call" class="dock-act-btn" href="#" title="Call Institution">📞 <span class="act-text">Call</span></a>
+          <a id="btn-act-web" class="dock-act-btn" href="#" target="_blank" rel="noopener noreferrer" title="Visit Official Website">🌐 <span class="act-text">Website</span></a>
+          <button id="btn-act-copy" class="dock-act-btn" title="Copy Contact Details">📋 <span class="act-text">Copy</span></button>
+          <button id="btn-act-share" class="dock-act-btn" title="Share Institution Link">🔗 <span class="act-text">Share</span></button>
         </div>
 
-        <!-- Contact Section -->
-        <div class="dock-section">
-          <h3 class="dock-section-title">Leadership & Contacts</h3>
-          <div class="dock-fact-grid">
-            <div class="fact-item full-width">
-              <span class="fact-label">HM / Principal / Dean</span>
-              <span id="dock-hm" class="fact-val font-medium">NA</span>
-            </div>
-            <div class="fact-item">
-              <span class="fact-label">Phone Line</span>
-              <span id="dock-phone" class="fact-val">NA</span>
-            </div>
-            <div class="fact-item">
-              <span class="fact-label">Email Address</span>
-              <span id="dock-email" class="fact-val">NA</span>
-            </div>
-            <div class="fact-item full-width">
-              <span class="fact-label">Official Website</span>
-              <span id="dock-website" class="fact-val">NA</span>
-            </div>
-          </div>
+        <div class="dock-section-divider"></div>
+
+        <!-- Comprehensive Fact Grid -->
+        <div class="dock-fact-grid">
+          <div class="fact-row"><span class="fact-label">Identifier / UDISE</span><span id="dock-id" class="fact-val font-mono">33300...</span></div>
+          <div class="fact-row"><span class="fact-label">Block & Taluk</span><span id="dock-block" class="fact-val">Agastheeswaram (Agastheeswaram)</span></div>
+          <div class="fact-row"><span class="fact-label">Management</span><span id="dock-mgmt" class="fact-val">Government</span></div>
+          <div class="fact-row"><span class="fact-label">Instruction Medium</span><span id="dock-medium" class="fact-val">English / Tamil</span></div>
+          <div class="fact-row"><span class="fact-label">Location / Village</span><span id="dock-location" class="fact-val">Nagercoil</span></div>
+          <div class="fact-row"><span class="fact-label">HM / Principal / Leadership</span><span id="dock-hm" class="fact-val font-medium">Headmaster Name</span></div>
+          <div class="fact-row"><span class="fact-label">Official Phone</span><span id="dock-phone" class="fact-val font-mono">04652-200000</span></div>
+          <div class="fact-row"><span class="fact-label">Official Email</span><span id="dock-email" class="fact-val font-mono">contact@school.edu.in</span></div>
+          <div class="fact-row"><span class="fact-label">Official Website</span><span id="dock-website" class="fact-val">www.school.edu.in</span></div>
+          <div class="fact-row"><span class="fact-label">Student Strength</span><span id="dock-strength" class="fact-val">1,240 students</span></div>
+          <div id="dock-courses-row" class="fact-row hidden"><span class="fact-label">Programs Offered</span><span id="dock-courses" class="fact-val">B.A., B.Sc., B.Com.</span></div>
+          <div id="dock-depts-row" class="fact-row hidden"><span class="fact-label">Departments</span><span id="dock-depts" class="fact-val">Physics, Mathematics</span></div>
+          <div class="fact-row"><span class="fact-label">Data Provenance</span><span id="dock-notes" class="fact-val">Verified Primary Registry & Trust Disclosures</span></div>
         </div>
 
-        <!-- Academics / Student Strength -->
-        <div id="dock-academic-sec" class="dock-section">
-          <h3 class="dock-section-title">Academics & Enrolment</h3>
-          <div class="dock-fact-grid">
-            <div class="fact-item full-width">
-              <span class="fact-label">Approx Student Strength</span>
-              <span id="dock-strength" class="fact-val">NA</span>
-            </div>
-            <div id="dock-courses-row" class="fact-item full-width hidden">
-              <span class="fact-label">Courses / Programmes</span>
-              <span id="dock-courses" class="fact-val text-sm">NA</span>
-            </div>
-            <div id="dock-depts-row" class="fact-item full-width hidden">
-              <span class="fact-label">Departments</span>
-              <span id="dock-depts" class="fact-val text-sm">NA</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Verification Provenance -->
-        <div class="dock-section">
-          <h3 class="dock-section-title">Data Provenance & Verification</h3>
-          <div class="verification-badge-container">
-            <span id="dock-status-badge" class="status-badge">Baseline only – UDISE</span>
-          </div>
-          <p id="dock-notes" class="dock-notes-text">UDISE+ baseline directory (Dept of Education)</p>
-          <button id="btn-open-correction" class="btn-link-action" aria-label="Suggest a correction or verified update for this institution">📝 Suggest a Data Correction / Update</button>
+        <div class="dock-footer-actions">
+          <button id="btn-open-correction" class="btn-report-correction">Suggest a Data Correction ↗</button>
         </div>
       </div>
     </aside>
-
   </main>
 
-  <!-- Legal & Trust Modals -->
-  <!-- 1. Privacy Policy Modal -->
-  <div id="modal-privacy" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2 id="privacy-modal-title" class="modal-title">Privacy Policy</h2>
-        <button class="modal-close-btn" data-close="modal-privacy" aria-label="Close Privacy Policy">✕</button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Effective Date:</strong> August 28, 2026</p>
-        <p><strong>Edu-Explore Cape</strong> is committed to user privacy and open public educational data access.</p>
-        <h4>1. Information Collection</h4>
-        <p>We do not collect personal identifying information (PII) from visitors. No account creation, login, or personal profile data is required to use this application.</p>
-        <h4>2. Local Storage Usage</h4>
-        <p>This site uses your browser's <code>localStorage</code> strictly for functional purposes: saving custom canvas block layout positions (<code>cape_plot_block_positions_v2</code>). No tracking or profiling cookies are stored.</p>
-        <h4>3. Public Data Provenance</h4>
-        <p>All institutional data presented is compiled exclusively from authoritative public domain disclosures: UDISE+ (Department of School Education, Tamil Nadu), CBSE SARAS Mandatory Disclosures, CISCE ICSE/ISC Affiliation Registry, and AISHE / NIRF higher education portals.</p>
-        <h4>4. Contact & Inquiries</h4>
-        <p>For questions or data corrections, contact: <code>support@capeedudetails.me</code></p>
-      </div>
+  <!-- Footer -->
+  <footer id="app-footer" role="contentinfo">
+    <div class="footer-left">
+      <span id="footer-stats-text">1,213 schools · 83 colleges · 9 blocks</span>
+      <span class="footer-sep">·</span>
+      <span class="footer-version">v3.0 Real Map Edition</span>
     </div>
-  </div>
-
-  <!-- 2. Terms of Service Modal -->
-  <div id="modal-terms" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="terms-modal-title">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2 id="terms-modal-title" class="modal-title">Terms of Service</h2>
-        <button class="modal-close-btn" data-close="modal-terms" aria-label="Close Terms of Service">✕</button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Last Updated:</strong> August 28, 2026</p>
-        <h4>1. Permissible Use</h4>
-        <p>Edu-Explore Cape is provided free of charge for students, parents, researchers, educators, and community members to explore educational infrastructure in Kanyakumari District.</p>
-        <h4>2. Data Disclaimer</h4>
-        <p>While every effort is made to audit, cross-reference, and verify information against primary sources (official portals, gazettes, and board registries), institutional leadership and phone numbers may change over time. Records without confirmed individual lines are marked explicitly as <strong>NA</strong> or grounded via Block Educational Officer (BEO) helplines.</p>
-        <h4>3. Geographic Schematic Disclaimer</h4>
-        <p>Node positions inside block boundaries are schematic constellation representations and do not represent surveyed GPS coordinates.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. Suggest Data Correction Modal -->
-  <div id="modal-correction" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="corr-modal-title">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2 id="corr-modal-title" class="modal-title">Suggest Data Correction</h2>
-        <button class="modal-close-btn" data-close="modal-correction" aria-label="Close Correction Form">✕</button>
-      </div>
-      <div class="modal-body">
-        <p>Help us maintain 100% ground-truth accuracy. If you are a school/college correspondent, principal, or teacher with updated information, please let us know.</p>
-        <form id="form-correction" class="correction-form">
-          <div class="form-group">
-            <label for="corr-inst-name">Institution Name / UDISE Code</label>
-            <input type="text" id="corr-inst-name" required placeholder="e.g. Comorin International School (33300101315)">
-          </div>
-          <div class="form-group">
-            <label for="corr-field">Field to Update</label>
-            <select id="corr-field">
-              <option value="principal">HM / Principal / Dean Name</option>
-              <option value="website">Official Website URL</option>
-              <option value="phone">Contact Telephone Line</option>
-              <option value="email">Official Email Address</option>
-              <option value="strength">Student Strength / Enrolment</option>
-              <option value="other">Other Information</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="corr-value">Verified Update & Source URL / Proof</label>
-            <textarea id="corr-value" rows="3" required placeholder="Provide the verified new value and official website link or evidence..."></textarea>
-          </div>
-          <button type="submit" class="btn-submit">Submit Correction Verification</button>
-        </form>
-        <div id="corr-success" class="alert-success hidden">Thank you! Your correction has been submitted for ground-truth verification.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mandatory Schematic Geographic Disclaimer & Trust Footer -->
-  <footer class="cape-footer" role="contentinfo">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <span class="disclaimer-text">Node positions are schematic within the block. They are not GPS coordinates.</span>
-        <span class="footer-stats" id="footer-stats-text">1,213 schools · 83 colleges · 9 blocks</span>
-      </div>
-      <div class="footer-right">
-        <a href="#privacy" class="footer-link" id="link-privacy">Privacy Policy</a>
-        <span class="footer-sep">·</span>
-        <a href="#terms" class="footer-link" id="link-terms">Terms of Service</a>
-        <span class="footer-sep">·</span>
-        <span class="footer-copy">© 2026 Edu-Explore Cape</span>
-      </div>
+    <div class="footer-right">
+      <a href="#" id="link-privacy">Privacy</a>
+      <span class="footer-sep">·</span>
+      <a href="#" id="link-terms">Terms & Geographic Disclaimer</a>
+      <span class="footer-sep">·</span>
+      <a href="/sitemap.xml" target="_blank">Sitemap</a>
     </div>
   </footer>
 
+  <!-- Modals -->
+  <div id="modal-privacy" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Privacy Policy">
+    <div class="modal-card">
+      <div class="modal-header"><h3>Privacy Policy</h3><button class="modal-close-btn" data-close="modal-privacy">✕</button></div>
+      <div class="modal-body">
+        <p><strong>Edu-Explore Cape</strong> is a public-interest educational directory for Kanyakumari District. We do not track personal identities or sell data. All institutional records are derived from public disclosures (UDISE+, AISHE, CBSE SARAS, and University Affiliation Gazettes).</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-terms" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Terms of Service">
+    <div class="modal-card">
+      <div class="modal-header"><h3>Terms & Geographic Disclaimer</h3><button class="modal-close-btn" data-close="modal-terms">✕</button></div>
+      <div class="modal-body">
+        <p><strong>Geographic Coordinates Disclaimer:</strong> Map positions reflect real administrative block polygon boundaries and verified address geocoding. High schools and colleges carry <code>Geocoded-Exact</code> precision, while baseline primary entries carry <code>Geocoded-Block-Centroid</code> placement within their respective block polygon.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-correction" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Submit Correction">
+    <div class="modal-card">
+      <div class="modal-header"><h3>Submit Data Correction</h3><button class="modal-close-btn" data-close="modal-correction">✕</button></div>
+      <div class="modal-body">
+        <form id="form-correction">
+          <div class="form-group"><label for="corr-inst-name">Institution</label><input type="text" id="corr-inst-name" readonly></div>
+          <div class="form-group"><label for="corr-field">Field to Update</label><select id="corr-field"><option value="leadership">HM / Principal / Leadership Name</option><option value="phone">Phone Number</option><option value="website">Official Website</option><option value="other">Other Information</option></select></div>
+          <div class="form-group"><label for="corr-value">Correct Information</label><input type="text" id="corr-value" required placeholder="Enter verified details"></div>
+          <div class="form-group"><label for="corr-source">Official Source / Proof Link</label><input type="text" id="corr-source" required placeholder="Official website, circular, or letterhead link"></div>
+          <button type="submit" class="btn-submit-corr">Submit for Verification</button>
+          <p id="corr-success" class="corr-success-msg hidden">✓ Correction submitted successfully!</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration error:', err));
+      });
+    }
+  </script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

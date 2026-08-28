@@ -1,10 +1,33 @@
-// Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer
-// Natural Organic Cluster Layout, Instant Point Hover & Direct-Track Block Dragging
+// Edu-Explore Cape 3.0 — Real Polygon Map, List <-> Map Linking & Tamil Engine
 
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'cape_plot_block_positions_v3';
+  const LANG_STORAGE_KEY = 'edu_explore_lang';
+
+  // Tamil Translations Dictionary
+  const I18N = {
+    en: {
+      brandTitle: "Edu-Explore Cape",
+      brandSubtitle: "Kanyakumari Educational Directory",
+      pillAll: "All (1,296)",
+      pillSchools: "Schools (1,213)",
+      pillColleges: "Colleges (83)",
+      searchPlaceholder: "Search 1,296 schools, colleges, leadership, locations...",
+      viewMap: "Map",
+      viewList: "List"
+    },
+    ta: {
+      brandTitle: "எடு-எக்ஸ்ப்ளோர் கேப்",
+      brandSubtitle: "கன்னியாகுமரி மாவட்ட கல்வி வழிகாட்டி",
+      pillAll: "அனைத்தும் (1,296)",
+      pillSchools: "பள்ளிகள் (1,213)",
+      pillColleges: "கல்லூரிகள் (83)",
+      searchPlaceholder: "1,296 பள்ளிகள், கல்லூரிகள், நிர்வாகிகளைத் தேடுக...",
+      viewMap: "வரைபடம்",
+      viewList: "பட்டியல்"
+    }
+  };
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -23,34 +46,24 @@
     let url = trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
     try {
       const parsed = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        return parsed.href;
-      }
-    } catch (e) {
-      return null;
-    }
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+    } catch (e) { return null; }
     return null;
   }
 
-  // Robust Clipboard Copy with Webview fallback
   function copyTextToClipboard(text, successMsg) {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(successMsg);
-      }).catch(() => {
-        fallbackCopyText(text, successMsg);
-      });
+      navigator.clipboard.writeText(text).then(() => showToast(successMsg)).catch(() => fallbackCopy(text, successMsg));
     } else {
-      fallbackCopyText(text, successMsg);
+      fallbackCopy(text, successMsg);
     }
   }
 
-  function fallbackCopyText(text, successMsg) {
+  function fallbackCopy(text, successMsg) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     textArea.style.position = "fixed";
     textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
@@ -64,19 +77,18 @@
   }
 
   let toastTimer = null;
-  function showToast(message) {
+  function showToast(msg) {
     const elToast = document.getElementById('toast-notification');
     if (!elToast) return;
     clearTimeout(toastTimer);
-    elToast.textContent = message;
+    elToast.textContent = msg;
     elToast.classList.remove('hidden');
-    toastTimer = setTimeout(() => {
-      elToast.classList.add('hidden');
-    }, 2800);
+    toastTimer = setTimeout(() => elToast.classList.add('hidden'), 2800);
   }
 
   const state = {
     view: 'plot',
+    lang: localStorage.getItem(LANG_STORAGE_KEY) || 'en',
     selectedBlock: null,
     selectedId: null,
     filterType: 'all',
@@ -84,29 +96,12 @@
     searchQuery: '',
     currentInstitution: null,
     blocks: [],
-    defaultBlocks: [],
     institutions: [],
     institutionsMap: new Map(),
     camera: {
-      x: 0,
-      y: 0,
-      w: 1000,
-      h: 1000,
-      targetX: 0,
-      targetY: 0,
-      targetW: 1000,
-      targetH: 1000,
-      isPanning: false,
-      startX: 0,
-      startY: 0
-    },
-    drag: {
-      isDragging: false,
-      blockName: null,
-      offsetX: 0,
-      offsetY: 0,
-      hasMoved: false,
-      nodesOffset: new Map()
+      x: 0, y: 0, w: 1000, h: 1000,
+      targetX: 0, targetY: 0, targetW: 1000, targetH: 1000,
+      isPanning: false, startX: 0, startY: 0
     }
   };
 
@@ -115,18 +110,25 @@
     surfaceIndex: document.getElementById('surface-index'),
     viewPlotBtn: document.getElementById('view-plot-btn'),
     viewIndexBtn: document.getElementById('view-index-btn'),
+    btnLangToggle: document.getElementById('btn-lang-toggle'),
+    
+    lblBrandTitle: document.getElementById('lbl-brand-title'),
+    lblBrandSubtitle: document.getElementById('lbl-brand-subtitle'),
+    pillAll: document.getElementById('pill-all'),
+    pillSchools: document.getElementById('pill-schools'),
+    pillColleges: document.getElementById('pill-colleges'),
+
     searchInput: document.getElementById('search-input'),
     searchClear: document.getElementById('search-clear'),
     pillBtns: document.querySelectorAll('.pill-btn'),
     kpiPills: document.querySelectorAll('.kpi-pill'),
     exportBtn: document.getElementById('export-btn'),
     exportMenu: document.getElementById('export-menu'),
-    btnResetView: document.getElementById('btn-reset-view'),
-    
+
     plotSvg: document.getElementById('plot-svg'),
     svgContainer: document.getElementById('svg-container'),
-    layerBlocks: document.getElementById('layer-blocks'),
-    layerLines: document.getElementById('layer-lines'),
+    layerPolygons: document.getElementById('layer-polygons'),
+    layerBlockLabels: document.getElementById('layer-block-labels'),
     layerNodes: document.getElementById('layer-nodes'),
     layerOverlays: document.getElementById('layer-overlays'),
 
@@ -145,6 +147,7 @@
     detailDock: document.getElementById('detail-dock'),
     dockClose: document.getElementById('dock-close'),
     dockTypeBadge: document.getElementById('dock-type-badge'),
+    dockStatusBadge: document.getElementById('dock-status-badge'),
     dockTitle: document.getElementById('dock-title'),
     dockCatLine: document.getElementById('dock-category-line'),
     dockId: document.getElementById('dock-id'),
@@ -161,14 +164,13 @@
     dockCourses: document.getElementById('dock-courses'),
     dockDeptsRow: document.getElementById('dock-depts-row'),
     dockDepts: document.getElementById('dock-depts'),
-    dockStatusBadge: document.getElementById('dock-status-badge'),
     dockNotes: document.getElementById('dock-notes'),
-    btnOpenCorrection: document.getElementById('btn-open-correction'),
 
     btnActCall: document.getElementById('btn-act-call'),
     btnActWeb: document.getElementById('btn-act-web'),
     btnActCopy: document.getElementById('btn-act-copy'),
     btnActShare: document.getElementById('btn-act-share'),
+    btnOpenCorrection: document.getElementById('btn-open-correction'),
 
     footerStats: document.getElementById('footer-stats-text'),
     linkPrivacy: document.getElementById('link-privacy'),
@@ -182,16 +184,6 @@
     corrSuccess: document.getElementById('corr-success')
   };
 
-  // Convert screen coordinates to SVG space
-  function screenToSvg(clientX, clientY) {
-    const pt = el.plotSvg.createSVGPoint();
-    pt.x = clientX;
-    pt.y = clientY;
-    const ctm = el.plotSvg.getScreenCTM();
-    if (!ctm) return { x: clientX, y: clientY };
-    return pt.matrixTransform(ctm.inverse());
-  }
-
   function readUrlParams() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('view')) state.view = params.get('view');
@@ -199,56 +191,36 @@
     if (params.get('id')) state.selectedId = params.get('id');
     if (params.get('type')) state.filterType = params.get('type');
     if (params.get('q')) state.searchQuery = params.get('q');
+    if (params.get('lang')) state.lang = params.get('lang');
   }
 
   function updateUrlParams() {
     const params = new URLSearchParams();
-    if (state.view !== 'plot') params.set('view', state.view);
+    if (state.view !== 'plot' && window.innerWidth < 900) params.set('view', state.view);
     if (state.selectedBlock) params.set('block', state.selectedBlock);
     if (state.selectedId) params.set('id', state.selectedId);
     if (state.filterType !== 'all') params.set('type', state.filterType);
     if (state.searchQuery) params.set('q', state.searchQuery);
+    if (state.lang !== 'en') params.set('lang', state.lang);
 
     const qs = params.toString();
     const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
     window.history.replaceState({}, '', newUrl);
   }
 
-  function loadCustomBlockPositions() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const posMap = JSON.parse(saved);
-      state.blocks.forEach(b => {
-        if (posMap[b.name]) {
-          const deltaX = posMap[b.name].cx - b.cx;
-          const deltaY = posMap[b.name].cy - b.cy;
-          b.cx = posMap[b.name].cx;
-          b.cy = posMap[b.name].cy;
+  function updateLanguage() {
+    const dict = I18N[state.lang] || I18N.en;
+    if (el.lblBrandTitle) el.lblBrandTitle.textContent = dict.brandTitle;
+    if (el.lblBrandSubtitle) el.lblBrandSubtitle.textContent = dict.brandSubtitle;
+    if (el.pillAll) el.pillAll.textContent = dict.pillAll;
+    if (el.pillSchools) el.pillSchools.textContent = dict.pillSchools;
+    if (el.pillColleges) el.pillColleges.textContent = dict.pillColleges;
+    if (el.searchInput) el.searchInput.placeholder = dict.searchPlaceholder;
+    if (el.viewPlotBtn) el.viewPlotBtn.textContent = dict.viewMap;
+    if (el.viewIndexBtn) el.viewIndexBtn.textContent = dict.viewList;
 
-          state.institutions.forEach(inst => {
-            if (inst.block === b.name) {
-              inst.schematic_x += deltaX;
-              inst.schematic_y += deltaY;
-            }
-          });
-        }
-      });
-    } catch (e) {
-      console.warn('Could not load custom positions:', e);
-    }
-  }
-
-  function saveCustomBlockPositions() {
-    try {
-      const posMap = {};
-      state.blocks.forEach(b => {
-        posMap[b.name] = { cx: b.cx, cy: b.cy };
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(posMap));
-    } catch (e) {
-      console.warn('Could not save positions:', e);
-    }
+    renderPlotBlockLabels();
+    renderIndexView();
   }
 
   async function initData() {
@@ -257,7 +229,6 @@
       if (!resBlocks.ok) throw new Error('Blocks API failure');
       const dataBlocks = await resBlocks.json();
       state.blocks = dataBlocks.blocks;
-      state.defaultBlocks = JSON.parse(JSON.stringify(dataBlocks.blocks));
 
       const resInst = await fetch('/api/institutions?limit=1500');
       if (!resInst.ok) throw new Error('Institutions API failure');
@@ -265,16 +236,14 @@
       state.institutions = dataInst.institutions;
 
       state.institutions.forEach(inst => {
-        inst.base_x = inst.schematic_x;
-        inst.base_y = inst.schematic_y;
         state.institutionsMap.set(inst.id, inst);
       });
 
-      loadCustomBlockPositions();
-
-      renderPlotBlocks();
+      renderRealBlockPolygons();
+      renderPlotBlockLabels();
       renderPlotNodes();
       renderIndexView();
+      updateLanguage();
       applyUrlState();
 
       const schoolCnt = state.institutions.filter(i => i.institution_type === 'school').length;
@@ -285,201 +254,117 @@
     }
   }
 
-  function switchView(newView) {
-    state.view = newView;
-    if (newView === 'plot') {
-      el.surfacePlot.classList.remove('hidden');
+  function switchMobileView(viewName) {
+    state.view = viewName;
+    if (viewName === 'plot') {
       el.surfacePlot.classList.add('active');
       el.surfaceIndex.classList.remove('active');
-      el.surfaceIndex.classList.add('hidden');
       el.viewPlotBtn.classList.add('active');
-      el.viewPlotBtn.setAttribute('aria-pressed', 'true');
       el.viewIndexBtn.classList.remove('active');
-      el.viewIndexBtn.setAttribute('aria-pressed', 'false');
     } else {
-      el.surfaceIndex.classList.remove('hidden');
       el.surfaceIndex.classList.add('active');
       el.surfacePlot.classList.remove('active');
-      el.surfacePlot.classList.add('hidden');
       el.viewIndexBtn.classList.add('active');
-      el.viewIndexBtn.setAttribute('aria-pressed', 'true');
       el.viewPlotBtn.classList.remove('active');
-      el.viewPlotBtn.setAttribute('aria-pressed', 'false');
       renderIndexView();
     }
     updateUrlParams();
   }
 
-  function renderPlotBlocks() {
-    el.layerBlocks.innerHTML = '';
-    updateConnectingLines();
+  // Render Real Vector Block Polygons
+  function renderRealBlockPolygons() {
+    el.layerPolygons.innerHTML = '';
 
     state.blocks.forEach(b => {
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      const isCenter = (b.name === 'Agasteeswaram');
-      g.setAttribute('class', `block-cluster-group ${isCenter ? 'center-hub' : ''}`);
-      g.setAttribute('data-block', b.name);
-      g.setAttribute('id', `block-grp-${b.name}`);
+      if (!b.svg_path) return;
 
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', b.cx);
-      circle.setAttribute('cy', b.cy);
-      circle.setAttribute('r', b.r);
-      circle.setAttribute('class', `block-boundary-ring ${isCenter ? 'ring-center' : ''}`);
-      circle.setAttribute('id', `ring-${b.name}`);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', b.svg_path);
+      path.setAttribute('class', 'block-polygon');
+      path.setAttribute('data-block', b.name);
+      path.setAttribute('id', `poly-${b.name}`);
+      path.setAttribute('role', 'region');
+      path.setAttribute('aria-label', `${b.name} Block, ${b.total_count} institutions`);
 
-      if (isCenter) {
-        const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        innerCircle.setAttribute('cx', b.cx);
-        innerCircle.setAttribute('cy', b.cy);
-        innerCircle.setAttribute('r', b.r + 8);
-        innerCircle.setAttribute('fill', 'none');
-        innerCircle.setAttribute('stroke', 'var(--color-ring-stroke)');
-        innerCircle.setAttribute('stroke-width', '1');
-        innerCircle.setAttribute('stroke-dasharray', '2 3');
-        innerCircle.setAttribute('id', `inner-ring-${b.name}`);
-        g.appendChild(innerCircle);
-      }
+      // Block hover: show block wash & tooltip
+      path.addEventListener('mouseenter', () => handleBlockHover(b));
+      path.addEventListener('mouseleave', () => handleBlockLeave());
 
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', b.cx);
-      text.setAttribute('y', b.cy - b.r - 8);
-      text.setAttribute('class', `block-label-text ${isCenter ? 'text-center-hub' : ''}`);
-      text.setAttribute('id', `label-${b.name}`);
-      text.textContent = isCenter ? 'KANYAKUMARI · AGASTEESWARAM' : b.name.toUpperCase();
-
-      const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      sub.setAttribute('x', b.cx);
-      sub.setAttribute('y', b.cy - b.r + 4);
-      sub.setAttribute('class', 'block-sub-count');
-      sub.setAttribute('id', `sub-${b.name}`);
-      sub.textContent = `${b.total_count} inst · ${b.taluk}`;
-
-      g.appendChild(circle);
-      g.appendChild(text);
-      g.appendChild(sub);
-
-      // Block dragging initiation on mousedown (if not clicking directly on a school node)
-      g.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.inst-node')) return;
-        e.preventDefault();
-        e.stopPropagation();
-        startBlockDrag(b, e);
-      });
-
-      g.addEventListener('click', (e) => {
-        if (state.drag.hasMoved) return;
-        if (e.target.closest('.inst-node')) return;
+      // Click to zoom into block
+      path.addEventListener('click', (e) => {
         e.stopPropagation();
         zoomToBlock(b.name);
       });
 
-      el.layerBlocks.appendChild(g);
+      el.layerPolygons.appendChild(path);
     });
   }
 
-  function updateConnectingLines() {
-    el.layerLines.innerHTML = '';
-    const centerBlock = state.blocks.find(b => b.name === 'Agasteeswaram') || { cx: 500, cy: 500 };
+  function renderPlotBlockLabels() {
+    el.layerBlockLabels.innerHTML = '';
 
     state.blocks.forEach(b => {
-      if (b.name === 'Agasteeswaram') return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', 'block-label-group');
 
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', centerBlock.cx);
-      line.setAttribute('y1', centerBlock.cy);
-      line.setAttribute('x2', b.cx);
-      line.setAttribute('y2', b.cy);
-      line.setAttribute('class', 'constellation-line');
-      line.setAttribute('id', `line-${b.name}`);
-      el.layerLines.appendChild(line);
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      title.setAttribute('x', b.cx);
+      title.setAttribute('y', b.cy);
+      title.setAttribute('class', 'block-label-text');
+      title.textContent = state.lang === 'ta' && b.name_ta ? b.name_ta : b.name.toUpperCase();
+
+      const count = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      count.setAttribute('x', b.cx);
+      count.setAttribute('y', b.cy + 13);
+      count.setAttribute('class', 'block-count-text');
+      count.textContent = `${b.total_count} inst`;
+
+      g.appendChild(title);
+      g.appendChild(count);
+      el.layerBlockLabels.appendChild(g);
     });
   }
 
-  function startBlockDrag(block, e) {
-    state.drag.isDragging = true;
-    state.drag.blockName = block.name;
-    state.drag.hasMoved = false;
+  function handleBlockHover(block) {
+    const poly = document.getElementById(`poly-${block.name}`);
+    if (poly) poly.classList.add('hovered');
 
-    const svgPt = screenToSvg(e.clientX, e.clientY);
-    state.drag.offsetX = svgPt.x - block.cx;
-    state.drag.offsetY = svgPt.y - block.cy;
+    el.layerOverlays.innerHTML = '';
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'svg-hover-card');
 
-    state.drag.nodesOffset.clear();
-    state.institutions.forEach(inst => {
-      if (inst.block === block.name) {
-        state.drag.nodesOffset.set(inst.id, {
-          relX: inst.schematic_x - block.cx,
-          relY: inst.schematic_y - block.cy
-        });
-      }
-    });
+    const bName = state.lang === 'ta' && block.name_ta ? block.name_ta : block.name;
+    const labelStr = `${bName} · ${block.total_count} Institutions`;
+    const cardWidth = Math.max(160, labelStr.length * 6.8 + 20);
+    const cardHeight = 26;
+    const cardX = block.cx - cardWidth / 2;
+    const cardY = block.cy - 30;
 
-    const grp = document.getElementById(`block-grp-${block.name}`);
-    if (grp) grp.classList.add('is-dragging');
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', cardX);
+    rect.setAttribute('y', cardY);
+    rect.setAttribute('width', cardWidth);
+    rect.setAttribute('height', cardHeight);
+    rect.setAttribute('class', 'svg-hover-card-bg');
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', cardX + cardWidth / 2);
+    text.setAttribute('y', cardY + 17);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('class', 'svg-hover-card-text');
+    text.textContent = labelStr;
+
+    g.appendChild(rect);
+    g.appendChild(text);
+    el.layerOverlays.appendChild(g);
   }
 
-  function onBlockDragMove(e) {
-    if (!state.drag.isDragging) return;
-
-    state.drag.hasMoved = true;
-    const b = state.blocks.find(bl => bl.name === state.drag.blockName);
-    if (!b) return;
-
-    const svgPt = screenToSvg(e.clientX, e.clientY);
-    
-    b.cx = svgPt.x - state.drag.offsetX;
-    b.cy = svgPt.y - state.drag.offsetY;
-
-    const ring = document.getElementById(`ring-${b.name}`);
-    if (ring) { ring.setAttribute('cx', b.cx); ring.setAttribute('cy', b.cy); }
-    const innerRing = document.getElementById(`inner-ring-${b.name}`);
-    if (innerRing) { innerRing.setAttribute('cx', b.cx); innerRing.setAttribute('cy', b.cy); }
-    const label = document.getElementById(`label-${b.name}`);
-    if (label) { label.setAttribute('x', b.cx); label.setAttribute('y', b.cy - b.r - 8); }
-    const sub = document.getElementById(`sub-${b.name}`);
-    if (sub) { sub.setAttribute('x', b.cx); sub.setAttribute('y', b.cy - b.r + 4); }
-
-    state.institutions.forEach(inst => {
-      if (inst.block === b.name) {
-        const offset = state.drag.nodesOffset.get(inst.id);
-        if (offset) {
-          inst.schematic_x = b.cx + offset.relX;
-          inst.schematic_y = b.cy + offset.relY;
-
-          const nodeEl = document.querySelector(`.inst-node[data-id="${inst.id}"]`);
-          if (nodeEl) {
-            const mark = nodeEl.querySelector('.node-mark');
-            if (mark) {
-              if (inst.institution_type === 'school') {
-                mark.setAttribute('cx', inst.schematic_x);
-                mark.setAttribute('cy', inst.schematic_y);
-              } else {
-                mark.setAttribute('x', inst.schematic_x - 3.5);
-                mark.setAttribute('y', inst.schematic_y - 3.5);
-              }
-            }
-          }
-        }
-      }
-    });
-
-    updateConnectingLines();
+  function handleBlockLeave() {
+    document.querySelectorAll('.block-polygon').forEach(p => p.classList.remove('hovered'));
+    el.layerOverlays.innerHTML = '';
   }
 
-  function onBlockDragEnd() {
-    if (!state.drag.isDragging) return;
-
-    const grp = document.getElementById(`block-grp-${state.drag.blockName}`);
-    if (grp) grp.classList.remove('is-dragging');
-
-    if (state.drag.hasMoved) {
-      saveCustomBlockPositions();
-    }
-
-    state.drag.isDragging = false;
-  }
-
+  // Plot All 1,296 Institution Points Inside Real Polygons
   function renderPlotNodes() {
     el.layerNodes.innerHTML = '';
     const filtered = getFilteredInstitutions();
@@ -494,12 +379,14 @@
       g.setAttribute('aria-label', `${inst.name}, ${inst.category} in ${inst.block}`);
 
       let mark;
+      const isCentroid = (inst.geocode_confidence === 'Geocoded-Block-Centroid');
+
       if (inst.institution_type === 'school') {
         mark = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         mark.setAttribute('cx', inst.schematic_x);
         mark.setAttribute('cy', inst.schematic_y);
-        mark.setAttribute('r', inst.verification_status && inst.verification_status.includes('Verified') ? '3.8' : '3.2');
-        mark.setAttribute('class', `node-mark school ${inst.verification_status && inst.verification_status.includes('Verified') ? 'verified' : ''}`);
+        mark.setAttribute('r', '3.4');
+        mark.setAttribute('class', `node-mark school ${isCentroid ? 'centroid-fallback' : ''}`);
       } else {
         mark = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         mark.setAttribute('x', inst.schematic_x - 3.5);
@@ -512,24 +399,25 @@
 
       g.appendChild(mark);
 
-      // Instant point hover event: paints school name directly on SVG overlay canvas
+      // Instant Single-Card Hover
       g.addEventListener('mouseenter', () => handleNodeHover(inst, g));
-      g.addEventListener('mousemove', () => handleNodeHover(inst, g));
       g.addEventListener('mouseleave', () => handleNodeLeave());
 
-      // Keyboard focus support
+      // Focus & Click
       g.addEventListener('focus', () => handleNodeHover(inst, g));
       g.addEventListener('blur', () => handleNodeLeave());
 
       g.addEventListener('click', (e) => {
         e.stopPropagation();
         selectInstitution(inst.id);
+        highlightIndexRow(inst.id);
       });
 
       g.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           selectInstitution(inst.id);
+          highlightIndexRow(inst.id);
         }
       });
 
@@ -537,24 +425,21 @@
     });
   }
 
-    // Instant on-canvas SVG hover card (Single clean element, zero ghosting)
-    // Instant on-canvas SVG hover card (Single clean element, zero ghosting)
   function handleNodeHover(inst, nodeGroup) {
     el.layerOverlays.innerHTML = '';
-    el.layerNodes.style.opacity = '0.50';
+    el.layerNodes.style.opacity = '0.45';
     nodeGroup.style.opacity = '1.0';
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('class', 'svg-hover-card');
 
-    const labelStr = `${inst.name} (${inst.category})`;
-    // Approximate dynamic width based on text length
+    const approxTag = (inst.geocode_confidence === 'Geocoded-Block-Centroid') ? ' (~approx)' : '';
+    const labelStr = `${inst.name} (${inst.category})${approxTag}`;
     const cardWidth = Math.max(140, labelStr.length * 6.4 + 18);
     const cardHeight = 24;
-    const cardX = inst.schematic_x + 10;
+    const cardX = inst.schematic_x + 9;
     const cardY = inst.schematic_y - 12;
 
-    // 1. Single crisp background pill
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('x', cardX);
     rect.setAttribute('y', cardY);
@@ -562,7 +447,6 @@
     rect.setAttribute('height', cardHeight);
     rect.setAttribute('class', 'svg-hover-card-bg');
 
-    // 2. Single text element
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     text.setAttribute('x', cardX + 9);
     text.setAttribute('y', cardY + 16);
@@ -572,11 +456,42 @@
     g.appendChild(rect);
     g.appendChild(text);
     el.layerOverlays.appendChild(g);
+
+    highlightIndexRow(inst.id, false);
   }
 
   function handleNodeLeave() {
     el.layerOverlays.innerHTML = '';
     el.layerNodes.style.opacity = '1.0';
+    document.querySelectorAll('.index-row').forEach(r => r.classList.remove('highlight-pulse'));
+  }
+
+  function highlightIndexRow(instId, scrollTo = true) {
+    document.querySelectorAll('.index-row').forEach(r => {
+      const match = (r.getAttribute('data-id') === instId);
+      r.classList.toggle('highlight-pulse', match);
+      if (match && scrollTo) {
+        r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  }
+
+  function pulseMapNode(instId) {
+    document.querySelectorAll('.inst-node').forEach(n => {
+      const match = (n.getAttribute('data-id') === instId);
+      n.classList.toggle('pulsing', match);
+      if (match) {
+        const inst = state.institutionsMap.get(instId);
+        if (inst) {
+          handleNodeHover(inst, n);
+        }
+      }
+    });
+  }
+
+  function unpulseMapNodes() {
+    document.querySelectorAll('.inst-node').forEach(n => n.classList.remove('pulsing'));
+    handleNodeLeave();
   }
 
   function setViewBox(x, y, w, h, animated = true) {
@@ -585,7 +500,7 @@
     state.camera.targetW = w;
     state.camera.targetH = h;
 
-    if (!animated) {
+    if (!animated || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       state.camera.x = x;
       state.camera.y = y;
       state.camera.w = w;
@@ -593,7 +508,6 @@
       el.plotSvg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
       return;
     }
-
     animateCamera();
   }
 
@@ -601,7 +515,7 @@
   function animateCamera() {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
-    const factor = 0.18;
+    const factor = 0.20;
     const dx = (state.camera.targetX - state.camera.x) * factor;
     const dy = (state.camera.targetY - state.camera.y) * factor;
     const dw = (state.camera.targetW - state.camera.w) * factor;
@@ -622,6 +536,7 @@
   function resetDistrictView() {
     state.selectedBlock = null;
     el.activeBlockPill.classList.add('hidden');
+    document.querySelectorAll('.block-polygon').forEach(p => p.classList.remove('active'));
     setViewBox(0, 0, 1000, 1000, true);
     updateUrlParams();
   }
@@ -631,30 +546,33 @@
     if (!b) return;
 
     state.selectedBlock = blockName;
-    el.activeBlockName.textContent = `${b.name} (${b.total_count} institutions)`;
+    const bName = state.lang === 'ta' && b.name_ta ? b.name_ta : b.name;
+    el.activeBlockName.textContent = `${bName} (${b.total_count} institutions)`;
     el.activeBlockPill.classList.remove('hidden');
 
-    const span = b.r * 2.5;
+    document.querySelectorAll('.block-polygon').forEach(p => {
+      p.classList.toggle('active', p.getAttribute('data-block') === blockName);
+    });
+
+    const spanX = (b.bbox_max_x - b.bbox_min_x) * 1.5 || 320;
+    const spanY = (b.bbox_max_y - b.bbox_min_y) * 1.5 || 320;
+    const span = Math.max(spanX, spanY);
     const x = Math.max(0, b.cx - span / 2);
     const y = Math.max(0, b.cy - span / 2);
+
     setViewBox(x, y, span, span, true);
     updateUrlParams();
   }
 
   // Pan Canvas Handlers
   el.svgContainer.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.inst-node') || e.target.closest('.block-cluster-group')) return;
+    if (e.target.closest('.inst-node')) return;
     state.camera.isPanning = true;
     state.camera.startX = e.clientX;
     state.camera.startY = e.clientY;
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (state.drag.isDragging) {
-      onBlockDragMove(e);
-      return;
-    }
-
     if (!state.camera.isPanning) return;
     const dx = (e.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
     const dy = (e.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
@@ -669,61 +587,7 @@
     state.camera.startY = e.clientY;
   });
 
-  window.addEventListener('mouseup', () => {
-    if (state.drag.isDragging) {
-      onBlockDragEnd();
-    }
-    state.camera.isPanning = false;
-  });
-
-  el.svgContainer.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const targetBlock = e.target.closest('.block-cluster-group');
-      if (targetBlock && !e.target.closest('.inst-node')) {
-        const blockName = targetBlock.getAttribute('data-block');
-        const b = state.blocks.find(bl => bl.name === blockName);
-        if (b) {
-          e.preventDefault();
-          startBlockDrag(b, touch);
-          return;
-        }
-      }
-
-      state.camera.isPanning = true;
-      state.camera.startX = touch.clientX;
-      state.camera.startY = touch.clientY;
-    }
-  }, { passive: false });
-
-  el.svgContainer.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      if (state.drag.isDragging) {
-        e.preventDefault();
-        onBlockDragMove(touch);
-        return;
-      }
-      if (state.camera.isPanning) {
-        const dx = (touch.clientX - state.camera.startX) * (state.camera.w / el.svgContainer.clientWidth);
-        const dy = (touch.clientY - state.camera.startY) * (state.camera.h / el.svgContainer.clientHeight);
-        state.camera.targetX -= dx;
-        state.camera.targetY -= dy;
-        state.camera.x -= dx;
-        state.camera.y -= dy;
-        el.plotSvg.setAttribute('viewBox', `${state.camera.x} ${state.camera.y} ${state.camera.w} ${state.camera.h}`);
-        state.camera.startX = touch.clientX;
-        state.camera.startY = touch.clientY;
-      }
-    }
-  }, { passive: false });
-
-  el.svgContainer.addEventListener('touchend', () => {
-    if (state.drag.isDragging) {
-      onBlockDragEnd();
-    }
-    state.camera.isPanning = false;
-  });
+  window.addEventListener('mouseup', () => { state.camera.isPanning = false; });
 
   el.svgContainer.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -733,10 +597,7 @@
 
     const cx = state.camera.x + state.camera.w / 2;
     const cy = state.camera.y + state.camera.h / 2;
-    const newX = cx - newW / 2;
-    const newY = cy - newH / 2;
-
-    setViewBox(newX, newY, newW, newH, true);
+    setViewBox(cx - newW / 2, cy - newH / 2, newW, newH, true);
   }, { passive: false });
 
   function updateKpiBadgeCounts(subset) {
@@ -748,12 +609,8 @@
     const verifiedCount = subset.filter(i => i.verification_status && i.verification_status.includes('Verified')).length;
 
     const countMap = {
-      'all': totalCount,
-      'schools': schoolsCount,
-      'colleges': collegesCount,
-      'govt': govtCount,
-      'aided': aidedCount,
-      'verified': verifiedCount
+      'all': totalCount, 'schools': schoolsCount, 'colleges': collegesCount,
+      'govt': govtCount, 'aided': aidedCount, 'verified': verifiedCount
     };
 
     el.kpiPills.forEach(pill => {
@@ -767,22 +624,13 @@
 
   function getFilteredInstitutions() {
     let list = state.institutions;
-    
-    if (state.filterType !== 'all') {
-      list = list.filter(i => i.institution_type === state.filterType);
-    }
+    if (state.filterType !== 'all') list = list.filter(i => i.institution_type === state.filterType);
 
-    if (state.kpiFilter === 'schools') {
-      list = list.filter(i => i.institution_type === 'school');
-    } else if (state.kpiFilter === 'colleges') {
-      list = list.filter(i => i.institution_type === 'college');
-    } else if (state.kpiFilter === 'govt') {
-      list = list.filter(i => i.management_type === 'Government');
-    } else if (state.kpiFilter === 'aided') {
-      list = list.filter(i => i.management_type === 'Private-Aided');
-    } else if (state.kpiFilter === 'verified') {
-      list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
-    }
+    if (state.kpiFilter === 'schools') list = list.filter(i => i.institution_type === 'school');
+    else if (state.kpiFilter === 'colleges') list = list.filter(i => i.institution_type === 'college');
+    else if (state.kpiFilter === 'govt') list = list.filter(i => i.management_type === 'Government');
+    else if (state.kpiFilter === 'aided') list = list.filter(i => i.management_type === 'Private-Aided');
+    else if (state.kpiFilter === 'verified') list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
 
     if (state.searchQuery.trim()) {
       const q = state.searchQuery.trim().toLowerCase();
@@ -800,31 +648,11 @@
 
   function renderIndexView() {
     el.indexContent.innerHTML = '';
-
-    let baseSubset = state.institutions;
-    if (state.filterType !== 'all') {
-      baseSubset = baseSubset.filter(i => i.institution_type === state.filterType);
-    }
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.trim().toLowerCase();
-      baseSubset = baseSubset.filter(i => 
-        i.name.toLowerCase().includes(q) ||
-        i.block.toLowerCase().includes(q) ||
-        i.location.toLowerCase().includes(q) ||
-        i.category.toLowerCase().includes(q) ||
-        (i.principal_name && i.principal_name.toLowerCase().includes(q)) ||
-        (i.identifier && i.identifier.includes(q))
-      );
-    }
-    updateKpiBadgeCounts(baseSubset);
-
     const filtered = getFilteredInstitutions();
+    updateKpiBadgeCounts(filtered);
 
     if (filtered.length === 0) {
       el.indexEmptyState.classList.remove('hidden');
-      el.emptyStateMsg.textContent = state.searchQuery 
-        ? `No institutions matched "${state.searchQuery}".` 
-        : 'No institutions available under the selected filter.';
       return;
     } else {
       el.indexEmptyState.classList.add('hidden');
@@ -832,7 +660,6 @@
 
     const grouped = {};
     state.blocks.forEach(b => { grouped[b.name] = []; });
-
     filtered.forEach(inst => {
       if (!grouped[inst.block]) grouped[inst.block] = [];
       grouped[inst.block].push(inst);
@@ -845,9 +672,10 @@
       const groupDiv = document.createElement('div');
       groupDiv.setAttribute('class', 'index-block-group');
 
+      const bName = state.lang === 'ta' && b.name_ta ? b.name_ta : b.name.toUpperCase();
       const heading = document.createElement('div');
       heading.setAttribute('class', 'index-block-heading');
-      heading.innerHTML = `<span>${escapeHtml(b.name.toUpperCase())}</span> <span class="index-block-count">${items.length} institutions</span>`;
+      heading.innerHTML = `<span>${escapeHtml(bName)}</span> <span class="index-block-count">${items.length} institutions</span>`;
       groupDiv.appendChild(heading);
 
       items.forEach(inst => {
@@ -858,22 +686,44 @@
         row.setAttribute('tabindex', '0');
         row.setAttribute('aria-label', `${inst.name}, ${inst.category}`);
 
+        const instName = state.lang === 'ta' && inst.name_ta ? inst.name_ta : inst.name;
         row.innerHTML = `
-          <div class="col-name">${escapeHtml(inst.name)}</div>
-          <div class="col-type type-${escapeHtml(inst.institution_type)}">${escapeHtml(inst.institution_type)}</div>
-          <div class="col-cat">${escapeHtml(inst.category)}</div>
-          <div class="col-mgmt">${escapeHtml(inst.management_type)}</div>
-          <div class="col-loc">${escapeHtml(inst.location || 'NA')}</div>
+          <div class="row-top">
+            <span class="row-name">${escapeHtml(instName)}</span>
+            <span class="row-badge type-${escapeHtml(inst.institution_type)}">${escapeHtml(inst.institution_type)}</span>
+          </div>
+          <div class="row-meta">
+            <span>${escapeHtml(inst.category)}</span>
+            <span>·</span>
+            <span>${escapeHtml(inst.location || inst.block)}</span>
+          </div>
         `;
+
+        // List -> Map Bi-directional Linking (Desktop hover & Mobile tap)
+        row.addEventListener('mouseenter', () => pulseMapNode(inst.id));
+        row.addEventListener('mouseleave', () => unpulseMapNodes());
+        row.addEventListener('focus', () => pulseMapNode(inst.id));
+        row.addEventListener('blur', () => unpulseMapNodes());
 
         row.addEventListener('click', () => {
           selectInstitution(inst.id);
+          // If on mobile, switch to map and zoom to point
+          if (window.innerWidth < 900) {
+            switchMobileView('plot');
+            zoomToBlock(inst.block);
+            pulseMapNode(inst.id);
+          }
         });
 
         row.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             selectInstitution(inst.id);
+            if (window.innerWidth < 900) {
+              switchMobileView('plot');
+              zoomToBlock(inst.block);
+              pulseMapNode(inst.id);
+            }
           }
         });
 
@@ -894,7 +744,8 @@
       const data = await res.json();
       state.currentInstitution = data;
 
-      el.dockTitle.textContent = data.name;
+      const instName = state.lang === 'ta' && data.name_ta ? data.name_ta : data.name;
+      el.dockTitle.textContent = instName;
       el.dockTypeBadge.textContent = data.institution_type.toUpperCase();
       el.dockCatLine.textContent = `${data.category} · ${data.management_type}`;
       el.dockId.textContent = data.udise_code || data.identifier || data.id;
@@ -904,59 +755,30 @@
       el.dockLocation.textContent = data.location || 'NA';
       
       const hmVal = data.principal_name || data.hm_name;
-      if (hmVal && hmVal !== 'NA' && hmVal !== 'Not Available') {
-        el.dockHm.textContent = hmVal;
-        el.dockHm.className = 'fact-val font-medium';
-      } else {
-        el.dockHm.textContent = 'NA';
-        el.dockHm.className = 'fact-val val-na';
-      }
+      el.dockHm.textContent = (hmVal && hmVal !== 'NA') ? hmVal : 'NA';
 
-      if (data.phone && data.phone !== 'NA' && data.phone !== 'Not Available') {
+      if (data.phone && data.phone !== 'NA') {
         const cleanPhone = data.phone.split('/')[0].trim();
-        if (data.sources_notes && data.sources_notes.includes('BEO')) {
-          el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a> <span class="text-sm font-mono" style="color:var(--color-ink-muted);display:block;margin-top:2px;">(Block BEO helpline)</span>`;
-        } else {
-          el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a>`;
-        }
-        el.dockPhone.className = 'fact-val';
-
+        el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a>`;
         if (el.btnActCall) {
           el.btnActCall.href = `tel:${cleanPhone}`;
           el.btnActCall.classList.remove('disabled');
-          el.btnActCall.removeAttribute('aria-disabled');
-          el.btnActCall.setAttribute('aria-label', `Call ${data.name} at ${cleanPhone}`);
         }
       } else {
         el.dockPhone.textContent = 'NA';
-        el.dockPhone.className = 'fact-val val-na';
-        if (el.btnActCall) {
-          el.btnActCall.removeAttribute('href');
-          el.btnActCall.classList.add('disabled');
-          el.btnActCall.setAttribute('aria-disabled', 'true');
-          el.btnActCall.setAttribute('aria-label', 'Phone number not available for this institution');
-        }
+        if (el.btnActCall) el.btnActCall.classList.add('disabled');
       }
 
       const safeWebUrl = sanitizeUrl(data.website);
       if (safeWebUrl) {
         el.dockWebsite.innerHTML = `<a href="${escapeHtml(safeWebUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.website)} ↗</a>`;
-        el.dockWebsite.className = 'fact-val';
         if (el.btnActWeb) {
           el.btnActWeb.href = safeWebUrl;
           el.btnActWeb.classList.remove('disabled');
-          el.btnActWeb.removeAttribute('aria-disabled');
-          el.btnActWeb.setAttribute('aria-label', `Visit official website of ${data.name}`);
         }
       } else {
         el.dockWebsite.textContent = 'NA';
-        el.dockWebsite.className = 'fact-val val-na';
-        if (el.btnActWeb) {
-          el.btnActWeb.removeAttribute('href');
-          el.btnActWeb.classList.add('disabled');
-          el.btnActWeb.setAttribute('aria-disabled', 'true');
-          el.btnActWeb.setAttribute('aria-label', 'Official website not available for this institution');
-        }
+        if (el.btnActWeb) el.btnActWeb.classList.add('disabled');
       }
 
       el.dockStrength.textContent = (data.student_strength && data.student_strength !== 'NA') ? data.student_strength : 'NA';
@@ -975,12 +797,8 @@
         el.dockDeptsRow.classList.add('hidden');
       }
 
-      el.dockStatusBadge.textContent = data.verification_status;
-      if (data.verification_status && data.verification_status.includes('Verified')) {
-        el.dockStatusBadge.className = 'status-badge verified';
-      } else {
-        el.dockStatusBadge.className = 'status-badge';
-      }
+      el.dockStatusBadge.textContent = data.verification_status || 'Verified';
+      el.dockStatusBadge.className = (data.verification_status && data.verification_status.includes('Verified')) ? 'status-badge verified' : 'status-badge';
       el.dockNotes.textContent = data.sources_notes || 'Official institution record';
 
       if (el.corrInstName) {
@@ -988,14 +806,10 @@
       }
 
       el.detailDock.classList.remove('hidden');
-
-      document.querySelectorAll('.index-row').forEach(r => {
-        r.classList.toggle('selected', r.getAttribute('data-id') === instId);
-      });
-
+      document.querySelectorAll('.index-row').forEach(r => r.classList.toggle('selected', r.getAttribute('data-id') === instId));
       updateUrlParams();
     } catch (err) {
-      console.error('Error loading institution detail:', err);
+      console.error('Error loading detail:', err);
     }
   }
 
@@ -1004,42 +818,24 @@
     state.currentInstitution = null;
     el.detailDock.classList.add('hidden');
     document.querySelectorAll('.index-row').forEach(r => r.classList.remove('selected'));
+    unpulseMapNodes();
     updateUrlParams();
   }
 
-  // Quick Action Button Handlers
-  if (el.btnActCall) {
-    el.btnActCall.addEventListener('click', (e) => {
-      if (el.btnActCall.classList.contains('disabled')) {
-        e.preventDefault();
-        showToast('ℹ️ Phone number not available on file');
-      }
-    });
-  }
-
-  if (el.btnActWeb) {
-    el.btnActWeb.addEventListener('click', (e) => {
-      if (el.btnActWeb.classList.contains('disabled')) {
-        e.preventDefault();
-        showToast('ℹ️ Official website not available on file');
-      }
-    });
-  }
-
+  // Quick Actions
   if (el.btnActCopy) {
     el.btnActCopy.addEventListener('click', () => {
       if (!state.currentInstitution) return;
       const d = state.currentInstitution;
-      const textCard = `🏛️ ${d.name} (${d.institution_type ? d.institution_type.toUpperCase() : 'INSTITUTION'})
-📍 Location: ${d.location && d.location !== 'NA' ? d.location : 'Not on file'}, ${d.block} Block
+      const textCard = `🏛️ ${d.name} (${d.institution_type.toUpperCase()})
+📍 ${d.location || 'NA'}, ${d.block} Block
 🆔 UDISE/ID: ${d.udise_code || d.identifier || d.id}
-👤 Leadership: ${d.principal_name && d.principal_name !== 'NA' ? d.principal_name : (d.hm_name && d.hm_name !== 'NA' ? d.hm_name : 'Not on file')}
-📞 Phone: ${d.phone && d.phone !== 'NA' ? d.phone : 'Not on file'}
-✉️ Email: ${d.email && d.email !== 'NA' ? d.email : 'Not on file'}
-🌐 Website: ${d.website && d.website !== 'NA' ? d.website : 'Not on file'}
-🔗 View on Edu-Explore Cape: https://capeedudetails.me/?id=${d.id}`;
-      
-      copyTextToClipboard(textCard, '✓ Contact details copied to clipboard!');
+👤 Leadership: ${d.principal_name || 'NA'}
+📞 Phone: ${d.phone || 'NA'}
+✉️ Email: ${d.email || 'NA'}
+🌐 Website: ${d.website || 'NA'}
+🔗 View: https://capeedudetails.me/?id=${d.id}`;
+      copyTextToClipboard(textCard, '✓ Contact card copied to clipboard!');
     });
   }
 
@@ -1049,16 +845,22 @@
       const d = state.currentInstitution;
       const shareUrl = `https://capeedudetails.me/?id=${d.id}`;
       if (navigator.share) {
-        navigator.share({
-          title: `${d.name} — Edu-Explore Cape`,
-          text: `Verified details for ${d.name} in Kanyakumari District.`,
-          url: shareUrl
-        }).catch(() => {
-          copyTextToClipboard(shareUrl, '🔗 Direct institution link copied to clipboard!');
+        navigator.share({ title: d.name, text: `Verified details for ${d.name}`, url: shareUrl }).catch(() => {
+          copyTextToClipboard(shareUrl, '🔗 Direct link copied to clipboard!');
         });
       } else {
-        copyTextToClipboard(shareUrl, '🔗 Direct institution link copied to clipboard!');
+        copyTextToClipboard(shareUrl, '🔗 Direct link copied to clipboard!');
       }
+    });
+  }
+
+  // Tamil Toggle
+  if (el.btnLangToggle) {
+    el.btnLangToggle.addEventListener('click', () => {
+      state.lang = (state.lang === 'en') ? 'ta' : 'en';
+      localStorage.setItem(LANG_STORAGE_KEY, state.lang);
+      updateLanguage();
+      updateUrlParams();
     });
   }
 
@@ -1067,35 +869,28 @@
       el.pillBtns.forEach(btn => {
         const isMatch = (btn.getAttribute('data-type') === state.filterType);
         btn.classList.toggle('active', isMatch);
-        btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
       });
     }
-
     if (state.searchQuery) {
       el.searchInput.value = state.searchQuery;
       el.searchClear.classList.remove('hidden');
     }
-
     if (state.selectedBlock) {
       zoomToBlock(state.selectedBlock);
     }
-
     if (state.selectedId) {
       selectInstitution(state.selectedId);
     }
-
-    if (state.view === 'index') {
-      switchView('index');
+    if (state.view === 'index' && window.innerWidth < 900) {
+      switchMobileView('index');
     }
   }
 
-  el.viewPlotBtn.addEventListener('click', () => switchView('plot'));
-  el.viewIndexBtn.addEventListener('click', () => switchView('index'));
+  el.viewPlotBtn.addEventListener('click', () => switchMobileView('plot'));
+  el.viewIndexBtn.addEventListener('click', () => switchMobileView('index'));
 
-  el.btnResetView.addEventListener('click', resetDistrictView);
   el.btnExitBlock.addEventListener('click', resetDistrictView);
   el.zoomReset.addEventListener('click', resetDistrictView);
-
   el.zoomIn.addEventListener('click', () => {
     setViewBox(state.camera.x + state.camera.w * 0.1, state.camera.y + state.camera.h * 0.1, state.camera.w * 0.8, state.camera.h * 0.8);
   });
@@ -1107,23 +902,16 @@
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (!el.detailDock.classList.contains('hidden')) {
-        closeDetailDock();
-      } else if (state.selectedBlock) {
-        resetDistrictView();
-      }
+      if (!el.detailDock.classList.contains('hidden')) closeDetailDock();
+      else if (state.selectedBlock) resetDistrictView();
       closeAllModals();
     }
   });
 
   el.pillBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      el.pillBtns.forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
+      el.pillBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
       state.filterType = btn.getAttribute('data-type');
       renderPlotNodes();
       renderIndexView();
@@ -1133,12 +921,8 @@
 
   el.kpiPills.forEach(pill => {
     pill.addEventListener('click', () => {
-      el.kpiPills.forEach(p => {
-        p.classList.remove('active');
-        p.setAttribute('aria-pressed', 'false');
-      });
+      el.kpiPills.forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
-      pill.setAttribute('aria-pressed', 'true');
       state.kpiFilter = pill.getAttribute('data-filter');
       renderIndexView();
     });
@@ -1174,14 +958,8 @@
       state.searchQuery = '';
       state.filterType = 'all';
       state.kpiFilter = 'all';
-      el.pillBtns.forEach(b => {
-        const isAll = (b.getAttribute('data-type') === 'all');
-        b.classList.toggle('active', isAll);
-        b.setAttribute('aria-pressed', isAll ? 'true' : 'false');
-      });
-      el.kpiPills.forEach(p => {
-        p.classList.toggle('active', p.getAttribute('data-filter') === 'all');
-      });
+      el.pillBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === 'all'));
+      el.kpiPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-filter') === 'all'));
       renderPlotNodes();
       renderIndexView();
       updateUrlParams();
@@ -1191,65 +969,28 @@
 
   el.exportBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isHidden = el.exportMenu.classList.contains('hidden');
-    el.exportMenu.classList.toggle('hidden', !isHidden);
-    el.exportBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    el.exportMenu.classList.toggle('hidden');
   });
+  window.addEventListener('click', () => el.exportMenu.classList.add('hidden'));
 
-  window.addEventListener('click', (e) => {
-    if (!el.exportMenu.classList.contains('hidden')) {
-      el.exportMenu.classList.add('hidden');
-      el.exportBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  // Modal Handlers
   function closeAllModals() {
-    [el.modalPrivacy, el.modalTerms, el.modalCorrection].forEach(m => {
-      if (m) m.classList.add('hidden');
-    });
+    [el.modalPrivacy, el.modalTerms, el.modalCorrection].forEach(m => { if (m) m.classList.add('hidden'); });
   }
 
-  if (el.linkPrivacy) {
-    el.linkPrivacy.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeAllModals();
-      if (el.modalPrivacy) el.modalPrivacy.classList.remove('hidden');
-    });
-  }
-
-  if (el.linkTerms) {
-    el.linkTerms.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeAllModals();
-      if (el.modalTerms) el.modalTerms.classList.remove('hidden');
-    });
-  }
-
-  if (el.btnOpenCorrection) {
-    el.btnOpenCorrection.addEventListener('click', () => {
-      closeAllModals();
-      if (el.modalCorrection) {
-        el.corrSuccess.classList.add('hidden');
-        el.modalCorrection.classList.remove('hidden');
-      }
-    });
-  }
+  if (el.linkPrivacy) el.linkPrivacy.addEventListener('click', (e) => { e.preventDefault(); closeAllModals(); el.modalPrivacy.classList.remove('hidden'); });
+  if (el.linkTerms) el.linkTerms.addEventListener('click', (e) => { e.preventDefault(); closeAllModals(); el.modalTerms.classList.remove('hidden'); });
+  if (el.btnOpenCorrection) el.btnOpenCorrection.addEventListener('click', () => { closeAllModals(); el.corrSuccess.classList.add('hidden'); el.modalCorrection.classList.remove('hidden'); });
 
   document.querySelectorAll('.modal-close-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const modalId = btn.getAttribute('data-close');
-      const targetModal = document.getElementById(modalId);
-      if (targetModal) targetModal.classList.add('hidden');
+      const target = document.getElementById(modalId);
+      if (target) target.classList.add('hidden');
     });
   });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.classList.add('hidden');
-      }
-    });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
   });
 
   if (el.formCorrection) {
@@ -1257,7 +998,7 @@
       e.preventDefault();
       el.corrSuccess.classList.remove('hidden');
       setTimeout(() => {
-        if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
+        el.modalCorrection.classList.add('hidden');
         showToast('✓ Correction submitted for verification review!');
       }, 2000);
     });
