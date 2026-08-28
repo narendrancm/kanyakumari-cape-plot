@@ -949,10 +949,21 @@ body {
 
 
 
-/* Header Variables */
-:root {
-  --header-height: 60px;
-  --footer-height: 38px;
+
+/* ==========================================================================
+   HEADER & UNIFIED SEGMENTED FILTER SHELF
+   ========================================================================== */
+
+/* Universal Button Reset */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
 }
 
 #app-header {
@@ -976,15 +987,15 @@ body {
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   text-decoration: none;
 }
 .brand-icon-wrapper {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   background: var(--color-sea-soft);
-  border: 1px solid rgba(31, 92, 87, 0.2);
+  border: 1px solid rgba(31, 92, 87, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1000,13 +1011,13 @@ body {
 }
 .brand-title {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--color-sea);
 }
 .brand-subtitle {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--color-ink-muted);
 }
 
@@ -1018,12 +1029,11 @@ body {
   min-width: 0;
 }
 
-/* Extended Search Box (approx 400px - 460px on desktop) */
 .search-box.extended-search {
   position: relative;
   flex: 1;
   max-width: 440px;
-  min-width: 240px;
+  min-width: 220px;
   display: flex;
   align-items: center;
 }
@@ -1067,44 +1077,57 @@ body {
   font-size: 13px;
 }
 
-/* Single Primary Header Segmented Filter Shelf (Editorial Navigation Segment, No Floating Pills) */
+/* UNIFIED SEGMENTED FILTER SHELF */
 .header-filter-shelf {
-  display: flex;
-  align-items: center;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 2px;
-  flex-shrink: 0;
-  overflow-x: auto;
+  background: #FDFBF7 !important;
+  border: 1px solid rgba(26, 25, 22, 0.14) !important;
+  border-radius: 7px !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  gap: 2px !important;
 }
 
-.filter-segment {
-  background: none;
-  border: none;
-  padding: 5px 9px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--color-ink-secondary);
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 130ms ease;
-  display: flex;
-  align-items: center;
-  gap: 3px;
+.header-filter-shelf .filter-segment {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  font: inherit !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+  padding: 0 10px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #4A4843 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  transition: background 120ms ease, color 120ms ease !important;
 }
 
-.filter-segment:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-sea);
+.header-filter-shelf .filter-segment:hover {
+  background: rgba(31, 92, 87, 0.08) !important;
+  color: #1F5C57 !important;
 }
 
-.filter-segment.active {
-  background: var(--color-sea);
-  color: #FFFFFF;
-  box-shadow: 0 1px 2px rgba(31, 92, 87, 0.22);
+.header-filter-shelf .filter-segment.active {
+  background: #1F5C57 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-radius: 5px !important;
 }
 
 .header-right {
@@ -1114,7 +1137,7 @@ body {
   gap: 8px;
 }
 
-/* Sidebar Header (Counter + Region Banner) */
+/* Sidebar Sticky Header */
 .index-header-sticky {
   position: sticky;
   top: 0;
