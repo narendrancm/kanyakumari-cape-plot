@@ -3,13 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-    (function(){
-      var t = localStorage.getItem('edu_explore_theme')
-        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'midnight' : 'paper');
-      document.documentElement.className = 'theme-' + t;
-    })();
-  </script>
+  
   
   <!-- Primary Meta Tags -->
   <title>Edu-Explore Cape — Kanyakumari Educational Directory & Spatial Explorer</title>
@@ -96,11 +90,7 @@
     </div>
 
     <div class="header-right">
-            <!-- Theme Switcher Button -->
-      <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light / Dark Mode" aria-label="Toggle Light and Dark Mode">
-        <span class="theme-icon icon-sun" aria-hidden="true">☀️</span>
-        <span class="theme-icon icon-moon" aria-hidden="true">🌙</span>
-      </button>
+            
 
       <!-- View Surface Switcher: Plot <-> Index -->
       <div class="view-toggle" role="group" aria-label="Switch presentation view">
@@ -142,7 +132,7 @@
 
       <!-- SVG Canvas -->
       <div id="svg-container" class="svg-container" tabindex="0" role="region" aria-label="Interactive Map of Kanyakumari Educational Blocks. Use mouse or touch to pan and zoom.">
-        <svg id="plot-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Constellation network representing 1,296 educational institutions across 9 blocks in Kanyakumari">
+        <svg id="plot-svg" viewBox="0 0 1100 1100" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Constellation network representing 1,296 educational institutions across 9 blocks in Kanyakumari">
           <defs>
             <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(26, 25, 22, 0.03)" stroke-width="1" />

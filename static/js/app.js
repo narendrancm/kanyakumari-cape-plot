@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'cape_plot_block_positions_v2';
+  const STORAGE_KEY = 'cape_plot_block_positions_v3';
 
   // Security: Strict HTML Entity Escaping against XSS
   function escapeHtml(str) {
@@ -47,12 +47,12 @@
     camera: {
       x: 0,
       y: 0,
-      w: 1000,
-      h: 1000,
+      w: 1100,
+      h: 1100,
       targetX: 0,
       targetY: 0,
-      targetW: 1000,
-      targetH: 1000,
+      targetW: 1100,
+      targetH: 1100,
       isPanning: false,
       startX: 0,
       startY: 0
@@ -553,7 +553,7 @@
   function resetDistrictView() {
     state.selectedBlock = null;
     el.activeBlockPill.classList.add('hidden');
-    setViewBox(0, 0, 1000, 1000, true);
+    setViewBox(0, 0, 1100, 1100, true);
     updateUrlParams();
   }
 
@@ -1120,8 +1120,7 @@
     btnThemeToggle.addEventListener('click', toggleTheme);
   }
 
-  initTheme();
-  
+    
   // Mobile HUD Popover Toggle
   const btnMobileHud = document.getElementById('btn-mobile-hud-toggle');
   const popoverMobileHud = document.getElementById('mobile-hud-popover');

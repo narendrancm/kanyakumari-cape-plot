@@ -51,50 +51,7 @@ body.theme-paper {
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-html.theme-midnight,
-body.theme-midnight {
-  --bg: #0B1120;
-  --bg-alt: #131E32;
-  --card: #1E293B;
-  --card-glass: rgba(30, 41, 59, 0.90);
-  --glass-bg: rgba(11, 17, 32, 0.88);
-  --dock-bg: rgba(19, 30, 50, 0.96);
-  --ink: #F8FAFC;
-  --ink-muted: #94A3B8;
-  --ink-dim: rgba(248, 250, 252, 0.35);
-  --accent: #10B981;
-  --accent-light: #34D399;
-  --accent-soft: rgba(16, 185, 129, 0.15);
-  --glow: #10B981;
-  --gold: #F59E0B;
-  --hairline: #1E293B;
-  --hairline-dark: #334155;
-  --line-dash: rgba(16, 185, 129, 0.22);
-  --ring-stroke: rgba(16, 185, 129, 0.35);
 
-  --color-paper: var(--bg);
-  --color-paper-alt: var(--bg-alt);
-  --color-paper-card: var(--card);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-ink-dim: var(--ink-dim);
-  --color-sea: var(--accent);
-  --color-sea-light: var(--accent-light);
-  --color-sea-soft: var(--accent-soft);
-  --color-sea-glow: var(--glow);
-  --color-hairline: var(--hairline);
-  --color-hairline-dark: var(--hairline-dark);
-  --color-glass-bg: var(--glass-bg);
-  --color-card-glass: var(--card-glass);
-  --color-dock-bg: var(--dock-bg);
-  --color-line-dash: var(--line-dash);
-  --color-ring-stroke: var(--ring-stroke);
-
-  --color-verified: #34D399;
-  --color-verified-bg: rgba(16, 185, 129, 0.18);
-  --color-baseline: #60A5FA;
-  --color-baseline-bg: rgba(96, 165, 250, 0.18);
-}
 
 
 *, *::before, *::after {
@@ -1130,22 +1087,7 @@ body {
   }
 }
 
-/* Theme Toggle Button */
-.theme-toggle-btn {
-  width: 36px;
-  height: 34px;
-  border-radius: 6px;
-  border: 1px solid var(--color-hairline);
-  background-color: var(--color-paper-alt);
-  color: var(--color-ink);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
-}
+
 .theme-toggle-btn:hover {
   border-color: var(--color-sea);
   background-color: var(--color-paper-card);
@@ -1170,17 +1112,8 @@ body.theme-paper .icon-moon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }
-html.theme-midnight .icon-sun,
-body.theme-midnight .icon-sun {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
-}
-html.theme-midnight .icon-moon,
-body.theme-midnight .icon-moon {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.5);
-  pointer-events: none;
-}
+
+
 
 /* ==========================================================================
    GLASSMORPHISM & HUD WITH @supports FALLBACK (PHASE 2)
