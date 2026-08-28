@@ -1,10 +1,38 @@
-// Cape Plot — Kanyakumari Spatial Explorer Client Engine
-// Measured Trousdale Interaction Model — Unconstrained 1:1 Direct-Track Block Dragging
+// Edu-Explore — Kanyakumari Educational Directory & Spatial Explorer Client Engine
+// Measured Trousdale Interaction Model — Unconstrained 1:1 Direct-Track Block Dragging & Production Hardening
 
 (function () {
   'use strict';
 
   const STORAGE_KEY = 'cape_plot_block_positions_v2';
+
+  // Security: Strict HTML Entity Escaping against XSS
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Security: Safe URL Protocol Validation
+  function sanitizeUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    const trimmed = rawUrl.trim();
+    if (!trimmed || trimmed === 'NA' || trimmed === 'Not Available') return null;
+    let url = trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.href;
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
 
   const state = {
     view: 'plot',
@@ -35,7 +63,7 @@
       offsetX: 0,
       offsetY: 0,
       hasMoved: false,
-      nodesOffset: new Map() // inst_id -> { dx: inst.x - block.cx, dy: inst.y - block.cy }
+      nodesOffset: new Map()
     }
   };
 
@@ -66,6 +94,9 @@
     btnResetPositions: document.getElementById('btn-reset-positions'),
 
     indexContent: document.getElementById('index-content'),
+    indexEmptyState: document.getElementById('index-empty-state'),
+    emptyStateMsg: document.getElementById('empty-state-msg'),
+    btnResetFilters: document.getElementById('btn-reset-filters'),
 
     detailDock: document.getElementById('detail-dock'),
     dockClose: document.getElementById('dock-close'),
@@ -88,11 +119,21 @@
     dockDepts: document.getElementById('dock-depts'),
     dockStatusBadge: document.getElementById('dock-status-badge'),
     dockNotes: document.getElementById('dock-notes'),
+    btnOpenCorrection: document.getElementById('btn-open-correction'),
 
-    footerStats: document.getElementById('footer-stats-text')
+    footerStats: document.getElementById('footer-stats-text'),
+    linkPrivacy: document.getElementById('link-privacy'),
+    linkTerms: document.getElementById('link-terms'),
+
+    modalPrivacy: document.getElementById('modal-privacy'),
+    modalTerms: document.getElementById('modal-terms'),
+    modalCorrection: document.getElementById('modal-correction'),
+    formCorrection: document.getElementById('form-correction'),
+    corrInstName: document.getElementById('corr-inst-name'),
+    corrSuccess: document.getElementById('corr-success')
   };
 
-  // Convert screen coordinates (clientX, clientY) to SVG canvas coordinate space
+  // Convert screen coordinates to SVG space
   function screenToSvg(clientX, clientY) {
     const pt = el.plotSvg.createSVGPoint();
     pt.x = clientX;
@@ -175,11 +216,13 @@
     try {
       if (fetchFromApi) {
         const resBlocks = await fetch('/api/blocks');
+        if (!resBlocks.ok) throw new Error('Blocks API failure');
         const dataBlocks = await resBlocks.json();
         state.blocks = dataBlocks.blocks;
         state.defaultBlocks = JSON.parse(JSON.stringify(dataBlocks.blocks));
 
         const resInst = await fetch('/api/institutions?limit=1500');
+        if (!resInst.ok) throw new Error('Institutions API failure');
         const dataInst = await resInst.json();
         state.institutions = dataInst.institutions;
 
@@ -204,7 +247,7 @@
 
       const schoolCnt = state.institutions.filter(i => i.institution_type === 'school').length;
       const collegeCnt = state.institutions.filter(i => i.institution_type === 'college').length;
-      el.footerStats.textContent = `${schoolCnt.toLocaleString()} schools · ${collegeCnt.toLocaleString()} colleges · 9 blocks (click & drag blocks freely anywhere)`;
+      el.footerStats.textContent = `${schoolCnt.toLocaleString()} schools · ${collegeCnt.toLocaleString()} colleges · 9 blocks`;
     } catch (err) {
       console.error('Initialization error:', err);
     }
@@ -218,14 +261,18 @@
       el.surfaceIndex.classList.remove('active');
       el.surfaceIndex.classList.add('hidden');
       el.viewPlotBtn.classList.add('active');
+      el.viewPlotBtn.setAttribute('aria-pressed', 'true');
       el.viewIndexBtn.classList.remove('active');
+      el.viewIndexBtn.setAttribute('aria-pressed', 'false');
     } else {
       el.surfaceIndex.classList.remove('hidden');
       el.surfaceIndex.classList.add('active');
       el.surfacePlot.classList.remove('active');
       el.surfacePlot.classList.add('hidden');
       el.viewIndexBtn.classList.add('active');
+      el.viewIndexBtn.setAttribute('aria-pressed', 'true');
       el.viewPlotBtn.classList.remove('active');
+      el.viewPlotBtn.setAttribute('aria-pressed', 'false');
       renderIndexView();
     }
     updateUrlParams();
@@ -280,7 +327,6 @@
       g.appendChild(text);
       g.appendChild(sub);
 
-      // Block Drag Start (Precise SVG transform)
       g.addEventListener('mousedown', (e) => {
         if (e.target.closest('.inst-node')) return;
         e.preventDefault();
@@ -318,7 +364,6 @@
     });
   }
 
-  // Exact 1:1 SVG Unconstrained Drag Engine
   function startBlockDrag(block, e) {
     state.drag.isDragging = true;
     state.drag.blockName = block.name;
@@ -328,7 +373,6 @@
     state.drag.offsetX = svgPt.x - block.cx;
     state.drag.offsetY = svgPt.y - block.cy;
 
-    // Cache relative offset of every node from its block center
     state.drag.nodesOffset.clear();
     state.institutions.forEach(inst => {
       if (inst.block === block.name) {
@@ -352,33 +396,18 @@
 
     const svgPt = screenToSvg(e.clientX, e.clientY);
     
-    // Completely unconstrained free movement anywhere
     b.cx = svgPt.x - state.drag.offsetX;
     b.cy = svgPt.y - state.drag.offsetY;
 
-    // Update Block SVG Elements
     const ring = document.getElementById(`ring-${b.name}`);
-    if (ring) {
-      ring.setAttribute('cx', b.cx);
-      ring.setAttribute('cy', b.cy);
-    }
+    if (ring) { ring.setAttribute('cx', b.cx); ring.setAttribute('cy', b.cy); }
     const innerRing = document.getElementById(`inner-ring-${b.name}`);
-    if (innerRing) {
-      innerRing.setAttribute('cx', b.cx);
-      innerRing.setAttribute('cy', b.cy);
-    }
+    if (innerRing) { innerRing.setAttribute('cx', b.cx); innerRing.setAttribute('cy', b.cy); }
     const label = document.getElementById(`label-${b.name}`);
-    if (label) {
-      label.setAttribute('x', b.cx);
-      label.setAttribute('y', b.cy - b.r - 8);
-    }
+    if (label) { label.setAttribute('x', b.cx); label.setAttribute('y', b.cy - b.r - 8); }
     const sub = document.getElementById(`sub-${b.name}`);
-    if (sub) {
-      sub.setAttribute('x', b.cx);
-      sub.setAttribute('y', b.cy - b.r + 4);
-    }
+    if (sub) { sub.setAttribute('x', b.cx); sub.setAttribute('y', b.cy - b.r + 4); }
 
-    // Update all Nodes inside this block
     state.institutions.forEach(inst => {
       if (inst.block === b.name) {
         const offset = state.drag.nodesOffset.get(inst.id);
@@ -403,7 +432,6 @@
       }
     });
 
-    // Update Connecting Lines
     updateConnectingLines();
   }
 
@@ -429,6 +457,8 @@
       g.setAttribute('class', `inst-node type-${inst.institution_type}`);
       g.setAttribute('data-id', inst.id);
       g.setAttribute('data-block', inst.block);
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', `${inst.name}, ${inst.category} in ${inst.block}`);
 
       let mark;
       if (inst.institution_type === 'school') {
@@ -577,7 +607,6 @@
     state.camera.isPanning = false;
   });
 
-  // Touch Support for Draggable Blocks on Tablets/Mobiles
   el.svgContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -664,6 +693,16 @@
     el.indexContent.innerHTML = '';
     const filtered = getFilteredInstitutions();
 
+    if (filtered.length === 0) {
+      el.indexEmptyState.classList.remove('hidden');
+      el.emptyStateMsg.textContent = state.searchQuery 
+        ? `No institutions matched your search for "${state.searchQuery}".` 
+        : 'No institutions available under the selected filter.';
+      return;
+    } else {
+      el.indexEmptyState.classList.add('hidden');
+    }
+
     const grouped = {};
     state.blocks.forEach(b => { grouped[b.name] = []; });
 
@@ -674,31 +713,41 @@
 
     state.blocks.forEach(b => {
       const items = grouped[b.name] || [];
-      if (items.length === 0 && state.searchQuery.trim()) return;
+      if (items.length === 0) return;
 
       const groupDiv = document.createElement('div');
       groupDiv.setAttribute('class', 'index-block-group');
 
       const heading = document.createElement('div');
       heading.setAttribute('class', 'index-block-heading');
-      heading.innerHTML = `<span>${b.name.toUpperCase()}</span> <span class="index-block-count">${items.length} institutions</span>`;
+      heading.innerHTML = `<span>${escapeHtml(b.name.toUpperCase())}</span> <span class="index-block-count">${items.length} institutions</span>`;
       groupDiv.appendChild(heading);
 
       items.forEach(inst => {
         const row = document.createElement('div');
         row.setAttribute('class', `index-row ${state.selectedId === inst.id ? 'selected' : ''}`);
         row.setAttribute('data-id', inst.id);
+        row.setAttribute('role', 'button');
+        row.setAttribute('tabindex', '0');
+        row.setAttribute('aria-label', `${inst.name}, ${inst.category}`);
 
         row.innerHTML = `
-          <div class="col-name">${inst.name}</div>
-          <div class="col-type type-${inst.institution_type}">${inst.institution_type}</div>
-          <div class="col-cat">${inst.category}</div>
-          <div class="col-mgmt">${inst.management_type}</div>
-          <div class="col-loc">${inst.location || '—'}</div>
+          <div class="col-name">${escapeHtml(inst.name)}</div>
+          <div class="col-type type-${escapeHtml(inst.institution_type)}">${escapeHtml(inst.institution_type)}</div>
+          <div class="col-cat">${escapeHtml(inst.category)}</div>
+          <div class="col-mgmt">${escapeHtml(inst.management_type)}</div>
+          <div class="col-loc">${escapeHtml(inst.location || 'NA')}</div>
         `;
 
         row.addEventListener('click', () => {
           selectInstitution(inst.id);
+        });
+
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectInstitution(inst.id);
+          }
         });
 
         groupDiv.appendChild(row);
@@ -714,52 +763,68 @@
 
     try {
       const res = await fetch(`/api/institutions/${instId}`);
+      if (!res.ok) throw new Error('Detail API failure');
       const data = await res.json();
 
       el.dockTitle.textContent = data.name;
       el.dockTypeBadge.textContent = data.institution_type.toUpperCase();
       el.dockCatLine.textContent = `${data.category} · ${data.management_type}`;
       el.dockId.textContent = data.udise_code || data.identifier || data.id;
-      el.dockBlock.textContent = `${data.block} (${data.taluk || '—'})`;
-      el.dockMgmt.textContent = data.management_type || '—';
-      el.dockMedium.textContent = data.medium || '—';
-      el.dockLocation.textContent = data.location || '—';
+      el.dockBlock.textContent = `${data.block} (${data.taluk || 'NA'})`;
+      el.dockMgmt.textContent = data.management_type || 'NA';
+      el.dockMedium.textContent = data.medium || 'NA';
+      el.dockLocation.textContent = data.location || 'NA';
       
-      el.dockHm.textContent = data.principal_name || data.hm_name || '—';
+      const hmVal = data.principal_name || data.hm_name;
+      if (hmVal && hmVal !== 'NA' && hmVal !== 'Not Available') {
+        el.dockHm.textContent = hmVal;
+        el.dockHm.className = 'fact-val font-medium';
+      } else {
+        el.dockHm.textContent = 'NA';
+        el.dockHm.className = 'fact-val val-na';
+      }
 
-      if (data.phone) {
-        if (data.sources_notes && data.sources_notes.includes('BEO block fallback')) {
-          el.dockPhone.innerHTML = `<a href="tel:${data.phone.split('/')[0].trim()}">${data.phone}</a> <span class="text-sm font-mono" style="color:var(--color-ink-muted);display:block;margin-top:2px;">(Block office number, not school-specific)</span>`;
+      if (data.phone && data.phone !== 'NA' && data.phone !== 'Not Available') {
+        const cleanPhone = data.phone.split('/')[0].trim();
+        if (data.sources_notes && data.sources_notes.includes('BEO')) {
+          el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a> <span class="text-sm font-mono" style="color:var(--color-ink-muted);display:block;margin-top:2px;">(Block BEO helpline)</span>`;
         } else {
-          el.dockPhone.innerHTML = `<a href="tel:${data.phone.split('/')[0].trim()}">${data.phone}</a>`;
+          el.dockPhone.innerHTML = `<a href="tel:${escapeHtml(cleanPhone)}">${escapeHtml(data.phone)}</a>`;
         }
+        el.dockPhone.className = 'fact-val';
       } else {
-        el.dockPhone.textContent = '—';
+        el.dockPhone.textContent = 'NA';
+        el.dockPhone.className = 'fact-val val-na';
       }
 
-      if (data.email) {
-        el.dockEmail.innerHTML = `<a href="mailto:${data.email.split('/')[0].trim()}">${data.email}</a>`;
+      if (data.email && data.email !== 'NA' && data.email !== 'Not Available') {
+        const cleanEmail = data.email.split('/')[0].trim();
+        el.dockEmail.innerHTML = `<a href="mailto:${escapeHtml(cleanEmail)}">${escapeHtml(data.email)}</a>`;
+        el.dockEmail.className = 'fact-val';
       } else {
-        el.dockEmail.textContent = '—';
+        el.dockEmail.textContent = 'NA';
+        el.dockEmail.className = 'fact-val val-na';
       }
 
-      if (data.website) {
-        const url = data.website.startsWith('http') ? data.website : `https://${data.website}`;
-        el.dockWebsite.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${data.website} ↗</a>`;
+      const safeWebUrl = sanitizeUrl(data.website);
+      if (safeWebUrl) {
+        el.dockWebsite.innerHTML = `<a href="${escapeHtml(safeWebUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.website)} ↗</a>`;
+        el.dockWebsite.className = 'fact-val';
       } else {
-        el.dockWebsite.textContent = '—';
+        el.dockWebsite.textContent = 'NA';
+        el.dockWebsite.className = 'fact-val val-na';
       }
 
-      el.dockStrength.textContent = data.student_strength || '—';
+      el.dockStrength.textContent = (data.student_strength && data.student_strength !== 'NA') ? data.student_strength : 'NA';
 
-      if (data.courses_offered) {
+      if (data.courses_offered && data.courses_offered !== 'NA') {
         el.dockCoursesRow.classList.remove('hidden');
         el.dockCourses.textContent = data.courses_offered;
       } else {
         el.dockCoursesRow.classList.add('hidden');
       }
 
-      if (data.departments || data.dept_breakdown) {
+      if ((data.departments || data.dept_breakdown) && data.departments !== 'NA') {
         el.dockDeptsRow.classList.remove('hidden');
         el.dockDepts.textContent = data.dept_breakdown || data.departments;
       } else {
@@ -767,12 +832,17 @@
       }
 
       el.dockStatusBadge.textContent = data.verification_status;
-      if (data.verification_status.includes('Verified')) {
+      if (data.verification_status && data.verification_status.includes('Verified')) {
         el.dockStatusBadge.className = 'status-badge verified';
       } else {
         el.dockStatusBadge.className = 'status-badge';
       }
       el.dockNotes.textContent = data.sources_notes || 'Official institution record';
+
+      // Pre-fill correction modal with current institution
+      if (el.corrInstName) {
+        el.corrInstName.value = `${data.name} (${data.udise_code || data.identifier || data.id})`;
+      }
 
       el.detailDock.classList.remove('hidden');
 
@@ -796,7 +866,9 @@
   function applyUrlState() {
     if (state.filterType) {
       el.pillBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-type') === state.filterType);
+        const isMatch = (btn.getAttribute('data-type') === state.filterType);
+        btn.classList.toggle('active', isMatch);
+        btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
       });
     }
 
@@ -842,13 +914,18 @@
       } else if (state.selectedBlock) {
         resetDistrictView();
       }
+      closeAllModals();
     }
   });
 
   el.pillBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      el.pillBtns.forEach(b => b.classList.remove('active'));
+      el.pillBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
       state.filterType = btn.getAttribute('data-type');
       renderPlotNodes();
       renderIndexView();
@@ -879,16 +956,95 @@
     updateUrlParams();
   });
 
+  if (el.btnResetFilters) {
+    el.btnResetFilters.addEventListener('click', () => {
+      el.searchInput.value = '';
+      el.searchClear.classList.add('hidden');
+      state.searchQuery = '';
+      state.filterType = 'all';
+      el.pillBtns.forEach(b => {
+        const isAll = (b.getAttribute('data-type') === 'all');
+        b.classList.toggle('active', isAll);
+        b.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+      });
+      renderPlotNodes();
+      renderIndexView();
+      updateUrlParams();
+    });
+  }
+
   el.exportBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    el.exportMenu.classList.toggle('hidden');
+    const isHidden = el.exportMenu.classList.contains('hidden');
+    el.exportMenu.classList.toggle('hidden', !isHidden);
+    el.exportBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
   });
 
-  window.addEventListener('click', () => {
+  window.addEventListener('click', (e) => {
     if (!el.exportMenu.classList.contains('hidden')) {
       el.exportMenu.classList.add('hidden');
+      el.exportBtn.setAttribute('aria-expanded', 'false');
     }
   });
+
+  // Modal Handlers
+  function closeAllModals() {
+    [el.modalPrivacy, el.modalTerms, el.modalCorrection].forEach(m => {
+      if (m) m.classList.add('hidden');
+    });
+  }
+
+  if (el.linkPrivacy) {
+    el.linkPrivacy.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeAllModals();
+      if (el.modalPrivacy) el.modalPrivacy.classList.remove('hidden');
+    });
+  }
+
+  if (el.linkTerms) {
+    el.linkTerms.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeAllModals();
+      if (el.modalTerms) el.modalTerms.classList.remove('hidden');
+    });
+  }
+
+  if (el.btnOpenCorrection) {
+    el.btnOpenCorrection.addEventListener('click', () => {
+      closeAllModals();
+      if (el.modalCorrection) {
+        el.corrSuccess.classList.add('hidden');
+        el.modalCorrection.classList.remove('hidden');
+      }
+    });
+  }
+
+  document.querySelectorAll('.modal-close-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.getAttribute('data-close');
+      const targetModal = document.getElementById(modalId);
+      if (targetModal) targetModal.classList.add('hidden');
+    });
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.add('hidden');
+      }
+    });
+  });
+
+  if (el.formCorrection) {
+    el.formCorrection.addEventListener('submit', (e) => {
+      e.preventDefault();
+      el.corrSuccess.classList.remove('hidden');
+      setTimeout(() => {
+        if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
+      }, 2500);
+    });
+  }
 
   readUrlParams();
   initData();
