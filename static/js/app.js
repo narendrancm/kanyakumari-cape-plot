@@ -1036,12 +1036,10 @@
 
   
   
-  
-  
-  // Header Filter Shelf Buttons Listener (All, Schools, Colleges, Govt, Aided, Verified)
-  document.querySelectorAll('.filter-shelf-btn').forEach(btn => {
+  // Top Primary Filter Bar Listener (Clean & Professional, No Emojis)
+  document.querySelectorAll('.top-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-shelf-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.top-filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.filterType = btn.getAttribute('data-filter') || 'all';
       renderPlotNodes();

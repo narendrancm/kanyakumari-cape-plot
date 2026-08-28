@@ -73,21 +73,22 @@
       </a>
     </div>
 
-    <!-- Extended Search Bar + Filter Shelf in Single Header -->
     <div class="header-center">
-      <div class="search-box extended-search" role="search">
+      <!-- Search Input -->
+      <div class="search-box" role="search">
         <span class="search-icon" aria-hidden="true">⌕</span>
         <input type="text" id="search-input" placeholder="Search 1,296 schools, colleges, leadership, locations..." aria-label="Search institutions">
         <button id="search-clear" class="search-clear-btn hidden" title="Clear Search" aria-label="Clear Search">✕</button>
       </div>
 
-      <div class="header-filter-shelf" role="group" aria-label="Filter institutions">
-        <button class="filter-shelf-btn active" data-filter="all" id="filter-all">All (1,296)</button>
-        <button class="filter-shelf-btn" data-filter="schools" id="filter-schools">Schools (1,213)</button>
-        <button class="filter-shelf-btn" data-filter="colleges" id="filter-colleges">Colleges (83)</button>
-        <button class="filter-shelf-btn" data-filter="govt" id="filter-govt">Govt (482)</button>
-        <button class="filter-shelf-btn" data-filter="aided" id="filter-aided">Aided (418)</button>
-        <button class="filter-shelf-btn" data-filter="verified" id="filter-verified">Verified (797)</button>
+      <!-- Top Primary Filter Shelf (No Emojis, Clean & Professional) -->
+      <div class="top-filter-bar" role="group" aria-label="Filter institutions">
+        <button class="top-filter-btn active" data-filter="all" id="filter-all">All (1,296)</button>
+        <button class="top-filter-btn" data-filter="schools" id="filter-schools">Schools (1,213)</button>
+        <button class="top-filter-btn" data-filter="colleges" id="filter-colleges">Colleges (83)</button>
+        <button class="top-filter-btn" data-filter="govt" id="filter-govt">Government (482)</button>
+        <button class="top-filter-btn" data-filter="aided" id="filter-aided">Aided (418)</button>
+        <button class="top-filter-btn" data-filter="verified" id="filter-verified">Verified (797)</button>
       </div>
     </div>
 
@@ -194,7 +195,7 @@
         <h2 id="dock-title" class="dock-title">Institution Name</h2>
         <div id="dock-category-line" class="dock-subhead">Category · Management</div>
 
-        <!-- Quick Action Buttons -->
+        <!-- Quick Action Buttons (Clean & Professional) -->
         <div class="dock-action-bar" role="group" aria-label="Direct Actions">
           <a id="btn-act-call" class="dock-act-btn" href="#" title="Call Institution"><span class="act-icon">📞</span><span class="act-text">Call</span></a>
           <a id="btn-act-web" class="dock-act-btn" href="#" target="_blank" rel="noopener noreferrer" title="Visit Official Website"><span class="act-icon">🌐</span><span class="act-text">Website</span></a>
