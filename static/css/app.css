@@ -895,49 +895,10 @@ body {
   color: #FFFFFF;
 }
 
-/* On-Map Floating Filter Legend Dock */
-.map-legend-dock {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 4px 6px;
-  display: flex;
-  gap: 4px;
-  box-shadow: var(--shadow-md);
-  z-index: 50;
-  max-width: calc(100% - 32px);
-  overflow-x: auto;
-}
-.map-legend-chip {
-  background: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  border-radius: 5px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-ink-secondary);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 140ms ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.map-legend-chip:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-sea);
-  color: var(--color-sea);
-}
-.map-legend-chip.active {
-  background: var(--color-sea);
-  border-color: var(--color-sea);
-  color: #FFFFFF;
-  box-shadow: var(--shadow-sm);
-}
+
+
+
+
 
 @media (max-width: 600px) {
   .map-legend-dock {
@@ -945,4 +906,43 @@ body {
     left: 8px;
     right: 8px;
   }
+}
+
+/* Top Primary Filter Bar (Clean & Professional, No Emojis) */
+.top-filter-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--color-canvas);
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+.top-filter-btn {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+.top-filter-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-sea);
+}
+.top-filter-btn.active {
+  background: #FFFFFF;
+  color: var(--color-sea);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-count-bar {
+  padding: 4px 0 2px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
 }

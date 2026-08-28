@@ -637,6 +637,7 @@
     });
   }
 
+  
   function getFilteredInstitutions() {
     let list = state.institutions;
 
@@ -645,17 +646,12 @@
       list = list.filter(i => i.block === state.selectedBlock);
     }
 
-    // Filter by Type (All / Schools / Colleges)
-    if (state.filterType !== 'all') {
-      list = list.filter(i => i.institution_type === state.filterType);
-    }
-
-    // Filter by KPI Pill
-    if (state.kpiFilter === 'schools') list = list.filter(i => i.institution_type === 'school');
-    else if (state.kpiFilter === 'colleges') list = list.filter(i => i.institution_type === 'college');
-    else if (state.kpiFilter === 'govt') list = list.filter(i => i.management_type === 'Government');
-    else if (state.kpiFilter === 'aided') list = list.filter(i => i.management_type === 'Private-Aided');
-    else if (state.kpiFilter === 'verified') list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
+    // Filter by Top Filter Bar (all, schools, colleges, govt, aided, verified)
+    if (state.filterType === 'schools') list = list.filter(i => i.institution_type === 'school');
+    else if (state.filterType === 'colleges') list = list.filter(i => i.institution_type === 'college');
+    else if (state.filterType === 'govt') list = list.filter(i => i.management_type === 'Government');
+    else if (state.filterType === 'aided') list = list.filter(i => i.management_type === 'Private-Aided');
+    else if (state.filterType === 'verified') list = list.filter(i => i.verification_status && i.verification_status.includes('Verified'));
 
     // Filter by Search Query
     if (state.searchQuery.trim()) {
@@ -672,6 +668,7 @@
     return list;
   }
 
+
   function renderIndexView() {
     el.indexContent.innerHTML = '';
     const filtered = getFilteredInstitutions();
@@ -682,6 +679,13 @@
       return;
     } else {
       el.indexEmptyState.classList.add('hidden');
+    }
+
+    
+    const sidebarTotalLabel = document.getElementById('sidebar-total-label');
+    if (sidebarTotalLabel) {
+      const regionText = state.selectedBlock ? ` in ${state.selectedBlock}` : ' in Kanyakumari';
+      sidebarTotalLabel.textContent = `Showing ${filtered.length.toLocaleString()} institutions${regionText}`;
     }
 
     const grouped = {};
@@ -1031,38 +1035,18 @@
   }
 
   
-  // Sync On-Map Legend Chips & Header Pills
-  document.querySelectorAll('.map-legend-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.map-legend-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-
-      const chipType = chip.getAttribute('data-type');
-      const chipFilter = chip.getAttribute('data-filter');
-
-      if (chipType) {
-        state.filterType = chipType;
-        state.kpiFilter = 'all';
-        el.pillBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === chipType));
-      } else if (chipFilter) {
-        state.kpiFilter = chipFilter;
-        if (chipFilter === 'schools') state.filterType = 'school';
-        else if (chipFilter === 'colleges') state.filterType = 'college';
-        else state.filterType = 'all';
-        el.kpiPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-filter') === chipFilter));
-      }
-
+  
+  // Top Primary Filter Bar Listener (Clean & Professional, No Emojis)
+  document.querySelectorAll('.top-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.top-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.filterType = btn.getAttribute('data-filter') || 'all';
       renderPlotNodes();
       renderIndexView();
       updateUrlParams();
     });
   });
-
-  const btnClearBlockFilter = document.getElementById('btn-clear-block-filter');
-  if (btnClearBlockFilter) {
-    btnClearBlockFilter.addEventListener('click', resetDistrictView);
-  }
-
-  readUrlParams();
+readUrlParams();
   initData();
 })();
