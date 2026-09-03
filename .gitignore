@@ -21,6 +21,12 @@ inbiotics/
 realestate_crm/
 *.pptx
 
+# Backups & Snapshots
+data/backups/
+data/snapshots/
+scratch/
+.netlify/
+
 # OS files
 .DS_Store
 Thumbs.db

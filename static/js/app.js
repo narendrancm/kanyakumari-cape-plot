@@ -8,20 +8,20 @@
     en: {
       brandTitle: "EDU-EXPLORE CAPE",
       brandSubtitle: "Kanyakumari Educational Directory",
-      pillAll: "All (1,296)",
+      pillAll: "All (1,295)",
       pillSchools: "Schools (1,213)",
-      pillColleges: "Colleges (83)",
-      searchPlaceholder: "Search 1,296 schools, colleges, leadership, locations...",
+      pillColleges: "Colleges (82)",
+      searchPlaceholder: "Search 1,295 schools, colleges, leadership, locations...",
       viewMap: "Map",
       viewList: "List"
     },
     ta: {
       brandTitle: "எடு-எக்ஸ்ப்ளோர் கேப்",
       brandSubtitle: "கன்னியாகுமரி மாவட்ட கல்வி வழிகாட்டி",
-      pillAll: "அனைத்தும் (1,296)",
+      pillAll: "அனைத்தும் (1,295)",
       pillSchools: "பள்ளிகள் (1,213)",
-      pillColleges: "கல்லூரிகள் (83)",
-      searchPlaceholder: "1,296 பள்ளிகள், கல்லூரிகள், நிர்வாகிகளைத் தேடுக...",
+      pillColleges: "கல்லூரிகள் (82)",
+      searchPlaceholder: "1,295 பள்ளிகள், கல்லூரிகள், நிர்வாகிகளைத் தேடுக...",
       viewMap: "வரைபடம்",
       viewList: "பட்டியல்"
     }
@@ -186,6 +186,9 @@
     modalCorrection: document.getElementById('modal-correction'),
     formCorrection: document.getElementById('form-correction'),
     corrInstName: document.getElementById('corr-inst-name'),
+    corrField: document.getElementById('corr-field'),
+    corrValue: document.getElementById('corr-value'),
+    corrSource: document.getElementById('corr-source'),
     corrSuccess: document.getElementById('corr-success')
   };
 
@@ -1078,14 +1081,36 @@ Visible map markers rendered: ${renderedCount}`);
     });
 
     if (el.formCorrection) {
-      el.formCorrection.addEventListener('submit', (e) => {
+      el.formCorrection.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (el.corrSuccess) el.corrSuccess.classList.remove('hidden');
-        setTimeout(() => {
-          if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
-          if (el.corrSuccess) el.corrSuccess.classList.add('hidden');
-          el.formCorrection.reset();
-        }, 1800);
+        const payload = {
+          institution_id: state.currentInstitution ? state.currentInstitution.id : 'GENERAL',
+          institution_name: el.corrInstName ? el.corrInstName.value : 'Unknown',
+          field_name: el.corrField ? el.corrField.value : 'other',
+          suggested_value: el.corrValue ? el.corrValue.value : '',
+          source_proof: el.corrSource ? el.corrSource.value : ''
+        };
+
+        try {
+          const res = await fetch('/api/corrections', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            if (el.corrSuccess) el.corrSuccess.classList.remove('hidden');
+            setTimeout(() => {
+              if (el.modalCorrection) el.modalCorrection.classList.add('hidden');
+              if (el.corrSuccess) el.corrSuccess.classList.add('hidden');
+              el.formCorrection.reset();
+            }, 1800);
+          } else {
+            alert('Unable to submit correction. Please ensure verified proof link and value are provided.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Network error submitting correction.');
+        }
       });
     }
   }

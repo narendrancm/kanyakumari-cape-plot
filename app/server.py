@@ -11,13 +11,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from pydantic import BaseModel, Field
+
+from app.admin_api import admin_router
 
 app = FastAPI(
     title="Edu-Explore Cape API - Kanyakumari Educational Directory & Spatial Explorer",
-    version="2.0.0",
+    version="2.1.0",
     docs_url="/api/docs",
     redoc_url=None
 )
+
+app.include_router(admin_router)
 
 # GZip Compression Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -216,11 +221,22 @@ def get_institution_detail(inst_id: str):
             cursor.execute("SELECT *, 'college' as institution_type FROM colleges WHERE id = ?", (inst_id,))
         row = cursor.fetchone()
         
-    conn.close()
     if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="Institution not found")
         
     res = dict(row)
+    # Seamless redirect/alias for merged duplicates (e.g. COL_52 -> COL_81)
+    if res.get("duplicate_of"):
+        target_id = res["duplicate_of"]
+        cursor.execute("SELECT * FROM institutions_master WHERE id = ?", (target_id,))
+        canonical_row = cursor.fetchone()
+        if canonical_row:
+            res = dict(canonical_row)
+            res["aliased_from"] = inst_id
+            res["is_merged_duplicate"] = True
+    
+    conn.close()
     if 'hm_name' in res and not res.get('principal_name'):
         res['principal_name'] = res['hm_name']
     return res
@@ -309,6 +325,35 @@ def export_csv(type: str = "all", block: Optional[str] = None):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
+class PublicCorrectionSubmission(BaseModel):
+    institution_id: str
+    institution_name: str
+    field_name: str
+    suggested_value: str
+    source_proof: str
+
+@app.post("/api/corrections")
+def submit_public_correction(payload: PublicCorrectionSubmission):
+    inst_id = payload.institution_id.strip()
+    inst_name = payload.institution_name.strip()[:200]
+    field_name = payload.field_name.strip()[:50]
+    suggested_val = payload.suggested_value.strip()[:500]
+    source_proof = payload.source_proof.strip()[:500]
+    
+    if not suggested_val or not source_proof:
+        raise HTTPException(status_code=400, detail="Suggested value and proof link are required")
+        
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO institution_corrections (institution_id, institution_name, field_name, suggested_value, source_proof, status)
+        VALUES (?, ?, ?, ?, ?, 'PENDING')
+    """, (inst_id, inst_name, field_name, suggested_val, source_proof))
+    conn.commit()
+    corr_id = cur.lastrowid
+    conn.close()
+    return {"status": "success", "message": "Correction submitted for administrative review", "correction_id": corr_id}
+
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -318,6 +363,13 @@ if os.path.exists(STATIC_DIR):
         if os.path.exists(index_file):
             return FileResponse(index_file)
         return {"message": "Edu-Explore Cape interface loading"}
+
+    @app.get("/admin", response_class=FileResponse)
+    def serve_admin_page():
+        admin_file = os.path.join(STATIC_DIR, "admin", "index.html")
+        if os.path.exists(admin_file):
+            return FileResponse(admin_file)
+        raise HTTPException(status_code=404, detail="Admin CMS interface not found")
 
 # Custom Branded HTML Exception Handlers
 

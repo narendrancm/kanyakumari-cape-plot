@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-09-03T09:10:45.069638+00:00",
+  "dataset": "Edu-Explore Cape (Kanyakumari Educational Directory)",
+  "baseline_institutions_indexed": 1296,
+  "active_canonical_institutions": 1295,
+  "schools_count": 1213,
+  "colleges_count": 83,
+  "merged_inactive_duplicates": 1,
+  "multi_source_verified_institutions": 1295,
+  "contact_coverage": {
+    "with_official_website": 133,
+    "with_verified_phone": 1286,
+    "with_verified_email": 785,
+    "with_leadership_name": 860
+  },
+  "macet_canonical_record": {
+    "id": "COL_81",
+    "official_name": "Marthandam College of Engineering and Technology",
+    "acronym": "MACET",
+    "website": "https://www.macet.edu.in",
+    "status": "Verified (Official Website & AICTE)",
+    "duplicate_merged": "COL_52"
+  },
+  "governance_metrics": {
+    "total_audit_log_events": 5,
+    "pending_conflicts": 0,
+    "pending_citizen_corrections": 0
+  }
+}

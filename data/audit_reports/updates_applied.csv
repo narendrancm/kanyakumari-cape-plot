@@ -1,0 +1,6 @@
+id,admin_username,action,institution_id,field_name,old_value,new_value,source,reason,timestamp
+1,system,MERGE_DUPLICATE,COL_52,id,COL_52,COL_81,https://www.macet.edu.in,Resolved duplicate MACET identity error into canonical COL_81,2026-09-03 09:05:39
+2,admin,APPROVE_CORRECTION,COL_2,principal_phone,,04652-255999,https://msuniv.ac.in/circulars/2026,Verified against MSU circular proof link,2026-09-03 09:09:43
+3,admin,EDIT_FIELD,COL_1,principal_phone,+91 4651 250566,04652-999888,ADMIN_CMS,Automated E2E live update test,2026-09-03 09:10:05
+4,admin,EDIT_FIELD,COL_1,principal_phone,04652-999888,+91 4651 250566,ADMIN_CMS,Reverting automated test,2026-09-03 09:10:05
+5,admin,APPROVE_CORRECTION,COL_2,principal_phone,,04652-255999,https://msuniv.ac.in/circulars/2026,Verified against MSU circular proof link,2026-09-03 09:10:06
