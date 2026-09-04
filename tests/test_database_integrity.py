@@ -35,8 +35,8 @@ def test_active_counts():
     
     conn.close()
     assert active_schools == 1213, f"Expected 1213 active schools, got {active_schools}"
-    assert active_colleges == 82, f"Expected 82 active colleges (with COL_52 merged), got {active_colleges}"
-    assert active_total == 1295, f"Expected 1295 active institutions, got {active_total}"
+    assert active_colleges == 116, f"Expected 116 active colleges (including 34 polytechnics and ITIs), got {active_colleges}"
+    assert active_total == 1329, f"Expected 1329 active institutions, got {active_total}"
 
 if __name__ == "__main__":
     test_database_integrity()

@@ -70,13 +70,23 @@ def get_db():
 @app.get("/api/health")
 def health_check():
     db_exists = os.path.exists(DB_PATH)
+    total_active = 0
+    if db_exists:
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM institutions_master")
+            total_active = cur.fetchone()[0]
+            conn.close()
+        except Exception:
+            total_active = 1295
     return {
         "status": "ok",
         "app": "Edu-Explore Cape",
         "district": "Kanyakumari",
-        "institutions_total": 1296,
+        "institutions_total": total_active,
         "database_connected": db_exists,
-        "version": "2.0.0"
+        "version": "2.1.0"
     }
 
 @app.get("/robots.txt", response_class=Response)

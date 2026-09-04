@@ -8,20 +8,20 @@
     en: {
       brandTitle: "EDU-EXPLORE CAPE",
       brandSubtitle: "Kanyakumari Educational Directory",
-      pillAll: "All (1,295)",
+      pillAll: "All (1,329)",
       pillSchools: "Schools (1,213)",
-      pillColleges: "Colleges (82)",
-      searchPlaceholder: "Search 1,295 schools, colleges, leadership, locations...",
+      pillColleges: "Colleges (116)",
+      searchPlaceholder: "Search 1,329 schools, colleges, polytechnics, ITIs...",
       viewMap: "Map",
       viewList: "List"
     },
     ta: {
       brandTitle: "எடு-எக்ஸ்ப்ளோர் கேப்",
       brandSubtitle: "கன்னியாகுமரி மாவட்ட கல்வி வழிகாட்டி",
-      pillAll: "அனைத்தும் (1,295)",
+      pillAll: "அனைத்தும் (1,329)",
       pillSchools: "பள்ளிகள் (1,213)",
-      pillColleges: "கல்லூரிகள் (82)",
-      searchPlaceholder: "1,295 பள்ளிகள், கல்லூரிகள், நிர்வாகிகளைத் தேடுக...",
+      pillColleges: "கல்லூரிகள் (116)",
+      searchPlaceholder: "1,329 பள்ளிகள், கல்லூரிகள், பாலிடெக்னிக், ITI-களைத் தேடுக...",
       viewMap: "வரைபடம்",
       viewList: "பட்டியல்"
     }
@@ -527,7 +527,7 @@ Visible map markers rendered: ${renderedCount}`);
 
   // RENDER INSTITUTION SIDEBAR FEED (Phase 2 & Phase 22)
   function renderIndexView() {
-    if (!el.indexContent) return;
+    if (!state.isLoaded || !el.indexContent) return;
     el.indexContent.innerHTML = '';
 
     const filtered = getFilteredInstitutions();
