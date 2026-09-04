@@ -38,7 +38,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Versioned Stylesheet -->
-  <link rel="stylesheet" href="/static/css/app.css?v=4.0.0">
+  <link rel="stylesheet" href="/static/css/app.css?v=4.2.0">
 
   <!-- Critical Inline Styles for Instant Layout & Styling Verification -->
   <style>
@@ -340,17 +340,21 @@
     /* Mobile / Tablet Toggle View (< 900px) */
     @media (max-width: 899px) {
       .view-toggle {
-        display: flex !important;
+        display: inline-flex !important;
       }
       .split-viewport {
         display: block !important;
-        height: calc(100vh - var(--header-height) - var(--footer-height)) !important;
+        position: relative !important;
         width: 100% !important;
+        height: auto !important;
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
       }
       .surface-index-sidebar {
         display: none !important;
         width: 100% !important;
         height: 100% !important;
+        min-height: 0 !important;
         flex-direction: column !important;
       }
       .surface-index-sidebar.active {
@@ -360,13 +364,14 @@
         display: none !important;
         width: 100% !important;
         height: 100% !important;
+        min-height: 0 !important;
       }
       .surface-map-canvas.active {
         display: block !important;
       }
     }
 
-    @media (max-width: 1099px) {
+    @media (max-width: 1099px) and (min-width: 769px) {
       #app-header {
         height: auto;
         min-height: var(--header-height);
@@ -552,8 +557,13 @@
       </div>
     </section>
 
+    <!-- Mobile Bottom Sheet Backdrop -->
+    <div id="dock-backdrop" class="dock-backdrop hidden" aria-hidden="true"></div>
+
     <!-- SLIDE-IN DETAIL DOCK -->
     <aside id="detail-dock" class="detail-dock hidden" role="dialog" aria-modal="false" aria-label="Institution Details">
+      <!-- Mobile Drag Pill Indicator -->
+      <div class="dock-drag-pill" aria-hidden="true"></div>
       <div class="dock-header">
         <div class="dock-badge-row">
           <span id="dock-type-badge" class="type-badge">SCHOOL</span>
@@ -672,6 +682,6 @@
       });
     }
   </script>
-  <script src="/static/js/app.js?v=4.1.0"></script>
+  <script src="/static/js/app.js?v=4.2.0"></script>
 </body>
 </html>

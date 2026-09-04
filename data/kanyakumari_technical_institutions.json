@@ -9,7 +9,11 @@
     "phone": "+91 4652 260271",
     "website": "http://www.gptcnagercoil.org",
     "registry_code": "TNDTE Code: 119 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 670.29,
+    "schematic_y": 688.72,
+    "latitude": 8.165069,
+    "longitude": 77.445801
   },
   {
     "id": "TECH_002",
@@ -21,7 +25,11 @@
     "phone": "+91 4652 253450",
     "website": "https://www.kamarajpolytechnic.com",
     "registry_code": "TNDTE Code: 230 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 695.97,
+    "schematic_y": 765.38,
+    "latitude": 8.136872,
+    "longitude": 77.464684
   },
   {
     "id": "TECH_003",
@@ -33,7 +41,11 @@
     "phone": "+91 4652 278077",
     "website": "https://www.csimgp.in",
     "registry_code": "TNDTE Code: 375 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 744.57,
+    "schematic_y": 705.44,
+    "latitude": 8.158919,
+    "longitude": 77.500419
   },
   {
     "id": "TECH_004",
@@ -45,7 +57,11 @@
     "phone": "+91 4652 253888",
     "website": "https://www.svpc.edu.in",
     "registry_code": "TNDTE Affiliated | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 756.79,
+    "schematic_y": 824.44,
+    "latitude": 8.115149,
+    "longitude": 77.509404
   },
   {
     "id": "TECH_005",
@@ -57,7 +73,11 @@
     "phone": "+91 4652 271222",
     "website": "http://www.suryapolytechnic.com",
     "registry_code": "TNDTE Code: 579 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 721.76,
+    "schematic_y": 689.19,
+    "latitude": 8.164896,
+    "longitude": 77.483647
   },
   {
     "id": "TECH_006",
@@ -69,7 +89,11 @@
     "phone": "+91 4652 260463",
     "website": "https://skilltraining.tn.gov.in",
     "registry_code": "NCVT MIS Code: GR33000045",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 668.93,
+    "schematic_y": 702.64,
+    "latitude": 8.159949,
+    "longitude": 77.444801
   },
   {
     "id": "TECH_007",
@@ -81,7 +105,11 @@
     "phone": "+91 4652 232145",
     "website": "https://skilltraining.tn.gov.in",
     "registry_code": "NCVT MIS Code: GR33000092",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 732.85,
+    "schematic_y": 680.66,
+    "latitude": 8.168033,
+    "longitude": 77.491801
   },
   {
     "id": "TECH_008",
@@ -93,7 +121,11 @@
     "phone": "+91 4652 230554",
     "website": "https://csikd.org",
     "registry_code": "NCVT MIS Code: PR33000109",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 729.97,
+    "schematic_y": 700.53,
+    "latitude": 8.160725,
+    "longitude": 77.489684
   },
   {
     "id": "TECH_009",
@@ -105,7 +137,11 @@
     "phone": "+91 4652 220025",
     "website": "https://www.tnstc.in",
     "registry_code": "NCVT MIS Code: PR33000416",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 741.19,
+    "schematic_y": 691.87,
+    "latitude": 8.16391,
+    "longitude": 77.497934
   },
   {
     "id": "TECH_010",
@@ -117,7 +153,11 @@
     "phone": "+91 4652 282244",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000011",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 722.68,
+    "schematic_y": 799.51,
+    "latitude": 8.124318,
+    "longitude": 77.484324
   },
   {
     "id": "TECH_011",
@@ -129,7 +169,11 @@
     "phone": "+91 4652 263222",
     "website": "https://www.knskpolytechniccollege.edu.in",
     "registry_code": "TNDTE Code: 368 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 750.44,
+    "schematic_y": 485.86,
+    "latitude": 8.239684,
+    "longitude": 77.504735
   },
   {
     "id": "TECH_012",
@@ -141,7 +185,11 @@
     "phone": "+91 4652 267555",
     "website": "http://www.capepolytechnic.com",
     "registry_code": "TNDTE Code: 723 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 760.61,
+    "schematic_y": 531.02,
+    "latitude": 8.223073,
+    "longitude": 77.512213
   },
   {
     "id": "TECH_013",
@@ -153,7 +201,11 @@
     "phone": "+91 4652 267556",
     "website": "http://www.newcapepolytechnic.com",
     "registry_code": "TNDTE Code: 828 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 766.05,
+    "schematic_y": 546.24,
+    "latitude": 8.217475,
+    "longitude": 77.516213
   },
   {
     "id": "TECH_014",
@@ -165,7 +217,11 @@
     "phone": "+91 4652 281462",
     "website": "http://www.sunedu.ac.in",
     "registry_code": "TNDTE Code: 518 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 700.48,
+    "schematic_y": 452.38,
+    "latitude": 8.251998,
+    "longitude": 77.468
   },
   {
     "id": "TECH_015",
@@ -177,7 +233,11 @@
     "phone": "+91 4652 281223",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000084",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 682.8,
+    "schematic_y": 408.87,
+    "latitude": 8.268002,
+    "longitude": 77.455
   },
   {
     "id": "TECH_016",
@@ -189,7 +249,11 @@
     "phone": "+91 4651 239900",
     "website": "http://www.udayacollege.com",
     "registry_code": "TNDTE Code: 568 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 587.6,
+    "schematic_y": 735.12,
+    "latitude": 8.148002,
+    "longitude": 77.385
   },
   {
     "id": "TECH_017",
@@ -201,7 +265,11 @@
     "phone": "+91 4652 250345",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000139",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 605.28,
+    "schematic_y": 778.62,
+    "latitude": 8.132002,
+    "longitude": 77.398
   },
   {
     "id": "TECH_018",
@@ -213,7 +281,11 @@
     "phone": "+91 4652 230005",
     "website": "http://www.morningstarpoly.edu.in",
     "registry_code": "TNDTE Code: 356 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 532.44,
+    "schematic_y": 651.25,
+    "latitude": 8.178851,
+    "longitude": 77.344441
   },
   {
     "id": "TECH_019",
@@ -225,7 +297,11 @@
     "phone": "+91 4652 231365",
     "website": "http://www.sreekrishnapolytechnic.org",
     "registry_code": "TNDTE Code: 381 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 545.33,
+    "schematic_y": 657.89,
+    "latitude": 8.176408,
+    "longitude": 77.353919
   },
   {
     "id": "TECH_020",
@@ -237,7 +313,11 @@
     "phone": "+91 4651 277255",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000216",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 532.77,
+    "schematic_y": 665.23,
+    "latitude": 8.173709,
+    "longitude": 77.344684
   },
   {
     "id": "TECH_021",
@@ -249,7 +329,11 @@
     "phone": "+91 4651 250566",
     "website": "http://www.nicollege.com",
     "registry_code": "TNDTE Code: 357 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 496.48,
+    "schematic_y": 517.62,
+    "latitude": 8.228002,
+    "longitude": 77.318
   },
   {
     "id": "TECH_022",
@@ -261,7 +345,11 @@
     "phone": "+91 4651 248350",
     "website": "http://www.stjudespolytechnic.in",
     "registry_code": "TNDTE Code: 919 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 519.76,
+    "schematic_y": 489.39,
+    "latitude": 8.238385,
+    "longitude": 77.335118
   },
   {
     "id": "TECH_023",
@@ -273,7 +361,11 @@
     "phone": "+91 4651 248888",
     "website": "http://www.bwdapolyofficial.org",
     "registry_code": "TNDTE Code: 823 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 531.89,
+    "schematic_y": 496.34,
+    "latitude": 8.235829,
+    "longitude": 77.344037
   },
   {
     "id": "TECH_024",
@@ -285,7 +377,11 @@
     "phone": "+91 4651 248234",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000329",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 505.78,
+    "schematic_y": 489.03,
+    "latitude": 8.238518,
+    "longitude": 77.324838
   },
   {
     "id": "TECH_025",
@@ -297,7 +393,11 @@
     "phone": "+91 4651 282111",
     "website": "https://www.mariapolytechnic.com",
     "registry_code": "TNDTE Affiliated | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 469.28,
+    "schematic_y": 272.94,
+    "latitude": 8.317999,
+    "longitude": 77.298
   },
   {
     "id": "TECH_026",
@@ -309,7 +409,11 @@
     "phone": "+91 4651 278288",
     "website": "http://www.vivekanandapolytechnic.edu.in",
     "registry_code": "TNDTE Code: 866 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 471.01,
+    "schematic_y": 227.12,
+    "latitude": 8.334852,
+    "longitude": 77.299272
   },
   {
     "id": "TECH_027",
@@ -321,7 +425,11 @@
     "phone": "+91 4651 277112",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000062",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 468.23,
+    "schematic_y": 244.32,
+    "latitude": 8.328526,
+    "longitude": 77.297228
   },
   {
     "id": "TECH_028",
@@ -333,7 +441,11 @@
     "phone": "+91 4651 268494",
     "website": "http://www.bethlehem.edu.in",
     "registry_code": "TNDTE Affiliated | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 383.6,
+    "schematic_y": 561.12,
+    "latitude": 8.212002,
+    "longitude": 77.235
   },
   {
     "id": "TECH_029",
@@ -345,7 +457,11 @@
     "phone": "+91 4651 268334",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000171",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 374.08,
+    "schematic_y": 525.78,
+    "latitude": 8.225,
+    "longitude": 77.228
   },
   {
     "id": "TECH_030",
@@ -357,7 +473,11 @@
     "phone": "+91 4651 240212",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000305",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 325.29,
+    "schematic_y": 503.33,
+    "latitude": 8.233258,
+    "longitude": 77.192125
   },
   {
     "id": "TECH_031",
@@ -369,7 +489,11 @@
     "phone": "+91 4651 260111",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000201",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 313.95,
+    "schematic_y": 495.15,
+    "latitude": 8.236267,
+    "longitude": 77.183787
   },
   {
     "id": "TECH_032",
@@ -381,7 +505,11 @@
     "phone": "+91 4651 272288",
     "website": "https://www.vmcsipolytechnic.org",
     "registry_code": "TNDTE Affiliated | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 384.56,
+    "schematic_y": 312.7,
+    "latitude": 8.303375,
+    "longitude": 77.235706
   },
   {
     "id": "TECH_033",
@@ -393,7 +521,11 @@
     "phone": "+91 4651 270333",
     "website": "[Unverified]",
     "registry_code": "TNDTE Code: 494 | AICTE Approved",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 378.75,
+    "schematic_y": 285.34,
+    "latitude": 8.313438,
+    "longitude": 77.231434
   },
   {
     "id": "TECH_034",
@@ -405,6 +537,10 @@
     "phone": "+91 4651 270444",
     "website": "[Unverified]",
     "registry_code": "NCVT MIS Code: PR33000302",
-    "is_active": 1
+    "is_active": 1,
+    "schematic_x": 393.12,
+    "schematic_y": 335.47,
+    "latitude": 8.295,
+    "longitude": 77.242
   }
 ]

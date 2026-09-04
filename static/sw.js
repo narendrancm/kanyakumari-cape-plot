@@ -1,5 +1,5 @@
-// Edu-Explore Cape — Service Worker v4.1.0
-const CACHE_NAME = 'edu-explore-cape-v4.1.0';
+// Edu-Explore Cape — Service Worker v4.2.0
+const CACHE_NAME = 'edu-explore-cape-v4.2.0';
 
 const PRECACHE_ASSETS = [
   '/',

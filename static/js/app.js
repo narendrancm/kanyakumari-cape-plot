@@ -152,6 +152,7 @@
     btnResetFilters: document.getElementById('btn-reset-filters'),
 
     detailDock: document.getElementById('detail-dock'),
+    dockBackdrop: document.getElementById('dock-backdrop'),
     dockClose: document.getElementById('dock-close'),
     dockTypeBadge: document.getElementById('dock-type-badge'),
     dockStatusBadge: document.getElementById('dock-status-badge'),
@@ -705,6 +706,7 @@ Visible map markers rendered: ${renderedCount}`);
     }
 
     if (el.detailDock) el.detailDock.classList.remove('hidden');
+    if (el.dockBackdrop) el.dockBackdrop.classList.remove('hidden');
     updateUrlParams();
   }
 
@@ -712,6 +714,7 @@ Visible map markers rendered: ${renderedCount}`);
     state.selectedId = null;
     state.currentInstitution = null;
     if (el.detailDock) el.detailDock.classList.add('hidden');
+    if (el.dockBackdrop) el.dockBackdrop.classList.add('hidden');
     unpulseMapNodes();
     document.querySelectorAll('.index-row.selected').forEach(r => r.classList.remove('selected'));
     updateUrlParams();
@@ -1045,6 +1048,7 @@ Visible map markers rendered: ${renderedCount}`);
 
     // Detail Dock Actions
     if (el.dockClose) el.dockClose.addEventListener('click', closeDetailDock);
+    if (el.dockBackdrop) el.dockBackdrop.addEventListener('click', closeDetailDock);
 
     if (el.btnActCopy) {
       el.btnActCopy.addEventListener('click', () => {
@@ -1056,9 +1060,22 @@ Visible map markers rendered: ${renderedCount}`);
     }
 
     if (el.btnActShare) {
-      el.btnActShare.addEventListener('click', () => {
+      el.btnActShare.addEventListener('click', async () => {
         const url = window.location.href;
-        copyTextToClipboard(url, '✓ Link copied to clipboard!');
+        const title = state.currentInstitution ? state.currentInstitution.name : 'Edu-Explore Cape';
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: title,
+              text: `${title} — Kanyakumari Educational Directory`,
+              url: url
+            });
+          } catch (err) {
+            // User canceled or share failed; fallback silently
+          }
+        } else {
+          copyTextToClipboard(url, '✓ Link copied to clipboard!');
+        }
       });
     }
 
